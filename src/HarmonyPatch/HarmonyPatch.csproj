@@ -29,6 +29,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <!-- make all references non-private, so they won't be copied to the output folder -->
+  <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
+    </ItemGroup>
+  </Target>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\..\deps\0Harmony.dll</HintPath>
@@ -353,6 +359,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NetWrite\Send_Patch.cs" />
+    <Compile Include="NetWrite\PacketID_Patch.cs" />
     <Compile Include="Performance\FPSTimer_Patch.cs" />
   </ItemGroup>
   <ItemGroup>

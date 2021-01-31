@@ -4,13 +4,14 @@ using Oxide.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
 namespace Oxide.Plugins
 {
-    [Info("Server Metrics", "Pinkstink", "1.0.12")]
+    [Info("Server Metrics", "Pinkstink", "1.0.13")]
     class ServerMetrics : RustPlugin
     {
         readonly StringBuilder _stringBuilder = new StringBuilder();
@@ -30,6 +31,8 @@ namespace Oxide.Plugins
             }
         }
         ReportUploader _reportUploader;
+        readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
+        Message.Type _lastMessageType;
 
         void OnServerInitialized()
         {
@@ -59,12 +62,22 @@ namespace Oxide.Plugins
             }
 
             Instance = this;
+            var messageTypes = Enum.GetValues(typeof(Message.Type));
+            foreach (Message.Type messageType in messageTypes)
+            {
+                if (_networkUpdates.ContainsKey(messageType))
+                    continue;
+                _networkUpdates.Add(messageType, 0);
+            }
             _reportUploader = new GameObject().AddComponent<ReportUploader>();
             Subscribe(nameof(OnPerformanceReportGenerated));
             Subscribe(nameof(OnPlayerDisconnected));
             foreach (var player in BasePlayer.activePlayerList)
                 OnPlayerConnected(player);
             Subscribe(nameof(OnPlayerConnected));
+            Subscribe(nameof(OnNetWritePacketID));
+            Subscribe(nameof(OnNetWriteSend));
+            ServerMgr.Instance.InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.05f, 0.15f), 0.1f);
         }
 
         void OnPlayerConnected(BasePlayer player)
@@ -80,6 +93,46 @@ namespace Oxide.Plugins
         {
             player.CancelInvoke(_playerStatsActions[player.userID]);
             _playerStatsActions.Remove(player.userID);
+        }
+
+        void OnNetWritePacketID(Message.Type messageType) => _lastMessageType = messageType;
+        void OnNetWriteSend(SendInfo sendInfo) => _networkUpdates[_lastMessageType] += sendInfo.connection != null ? 1 : sendInfo.connections.Count;
+
+        void LogNetworkUpdates()
+        {
+            if (_networkUpdates.Count < 1) return;
+            var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+            _stringBuilder.Append("network_updates,server=");
+            _stringBuilder.Append(config.serverTag);
+            _stringBuilder.Append(" ");
+
+            var enumerator = _networkUpdates.GetEnumerator();
+            var networkUpdate = enumerator.Current;
+            _stringBuilder.Append(networkUpdate.Key.ToString());
+            _stringBuilder.Append("=");
+            _stringBuilder.Append(networkUpdate.Value.ToString());
+            _stringBuilder.Append("i");
+
+            while (enumerator.MoveNext())
+            {
+                networkUpdate = enumerator.Current;
+                _stringBuilder.Append(",");
+                _stringBuilder.Append(networkUpdate.Key.ToString());
+                _stringBuilder.Append("=");
+                _stringBuilder.Append(networkUpdate.Value.ToString());
+                _stringBuilder.Append("i");
+            }
+
+            _stringBuilder.Append(" ");
+            _stringBuilder.Append(epochNow);
+            _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
+            _stringBuilder.Clear();
+
+            var enumKeys = _networkUpdates.Keys.ToArray();
+            foreach (var key in enumKeys)
+            {
+                _networkUpdates[key] = 0;
+            }
         }
 
         void GatherPlayerSecondStats(BasePlayer player)
@@ -108,6 +161,9 @@ namespace Oxide.Plugins
             Unsubscribe(nameof(OnPerformanceReportGenerated));
             Unsubscribe(nameof(OnPlayerConnected));
             Unsubscribe(nameof(OnPlayerDisconnected));
+            Unsubscribe(nameof(OnNetWritePacketID));
+            Unsubscribe(nameof(OnNetWriteSend));
+            ServerMgr.Instance.CancelInvoke(LogNetworkUpdates);
             foreach (var player in _playerStatsActions)
             {
                 var basePlayer = BasePlayer.FindByID(player.Key);
@@ -125,6 +181,8 @@ namespace Oxide.Plugins
             Unsubscribe(nameof(OnPerformanceReportGenerated));
             Unsubscribe(nameof(OnPlayerConnected));
             Unsubscribe(nameof(OnPlayerDisconnected));
+            Unsubscribe(nameof(OnNetWritePacketID));
+            Unsubscribe(nameof(OnNetWriteSend));
         }
 
         void OnPerformanceReportGenerated()
@@ -286,6 +344,7 @@ namespace Oxide.Plugins
                 if (request.isHttpError)
                 {
                     Debug.LogError($"Error submitting metric: {request.error}");
+                    Debug.LogError(request.downloadHandler.text);
                     yield break;
                 }
             }
