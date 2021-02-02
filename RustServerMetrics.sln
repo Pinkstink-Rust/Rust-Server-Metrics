@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plugin", "src\Plugin\Plugin.csproj", "{631CFD0C-F987-478F-8C98-E79E8FE962BA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HarmonyPatch", "src\HarmonyPatch\HarmonyPatch.csproj", "{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RustServerMetrics", "src\RustServerMetrics\RustServerMetrics.csproj", "{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,10 +11,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{631CFD0C-F987-478F-8C98-E79E8FE962BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{631CFD0C-F987-478F-8C98-E79E8FE962BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{631CFD0C-F987-478F-8C98-E79E8FE962BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{631CFD0C-F987-478F-8C98-E79E8FE962BA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 
-namespace RustServerMetrics_HarmonyPatch.NetWrite
+namespace RustServerMetrics.Harmony.NetWrite
 {
     [HarmonyPatch(typeof(Network.NetWrite), nameof(Network.NetWrite.PacketID))]
     public class PacketID_Patch
@@ -15,15 +15,17 @@ namespace RustServerMetrics_HarmonyPatch.NetWrite
         {
             List<CodeInstruction> retList = new List<CodeInstruction>(originalInstructions);
 
-            var methodInfo = typeof(Interface).GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public).FirstOrDefault(x => x.Name == "CallHook" && x.GetParameters().Count() == 2 && x.GetParameters()[1].ParameterType == typeof(object));
+            var fieldInfo = typeof(SingletonComponent<MetricsLogger>)
+                .GetField(nameof(SingletonComponent<MetricsLogger>.Instance), System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+
+            var methodInfo = typeof(MetricsLogger)
+                .GetMethod(nameof(MetricsLogger.OnNetWritePacketID), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 
             retList.InsertRange(retList.Count - 1, new List<CodeInstruction>
             {
-                new CodeInstruction(OpCodes.Ldstr, "OnNetWritePacketID"),
+                new CodeInstruction(OpCodes.Ldsfld, fieldInfo),
                 new CodeInstruction(OpCodes.Ldarg_1),
-                new CodeInstruction(OpCodes.Box, typeof(Message.Type)),
-                new CodeInstruction(OpCodes.Call, methodInfo),
-                new CodeInstruction(OpCodes.Pop)
+                new CodeInstruction(OpCodes.Call, methodInfo)
             });
 
             return retList;

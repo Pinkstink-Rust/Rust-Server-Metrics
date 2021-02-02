@@ -5,12 +5,12 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Oxide.Plugins</RootNamespace>
-    <AssemblyName>Plugin</AssemblyName>
+    <RootNamespace>RustServerMetrics</RootNamespace>
+    <AssemblyName>RustServerMetrics</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <ProjectGuid>{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,7 +20,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,7 +28,6 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet />
   </PropertyGroup>
   <!-- make all references non-private, so they won't be copied to the output folder -->
   <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
@@ -60,6 +58,9 @@
     <Reference Include="com.unity.postprocessing.Runtime">
       <HintPath>..\..\deps\com.unity.postprocessing.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="CurvedTextMeshPro">
+      <HintPath>..\..\deps\CurvedTextMeshPro.dll</HintPath>
+    </Reference>
     <Reference Include="DryWetMidi">
       <HintPath>..\..\deps\DryWetMidi.dll</HintPath>
     </Reference>
@@ -68,6 +69,9 @@
     </Reference>
     <Reference Include="EasyAntiCheat.Server">
       <HintPath>..\..\deps\EasyAntiCheat.Server.dll</HintPath>
+    </Reference>
+    <Reference Include="EZhex1991.EZSoftBone">
+      <HintPath>..\..\deps\EZhex1991.EZSoftBone.dll</HintPath>
     </Reference>
     <Reference Include="Facepunch.Console">
       <HintPath>..\..\deps\Facepunch.Console.dll</HintPath>
@@ -96,17 +100,8 @@
     <Reference Include="Facepunch.SteamNetworking">
       <HintPath>..\..\deps\Facepunch.SteamNetworking.dll</HintPath>
     </Reference>
-    <Reference Include="Facepunch.Steamworks">
-      <HintPath>..\..\..\..\Raid Simulator\Standalone Plugins\StandalonePlugins\Dependencies\Facepunch.Steamworks.dll</HintPath>
-    </Reference>
     <Reference Include="Facepunch.Steamworks.Posix">
-      <HintPath>..\..\..\..\Raid Simulator\Standalone Plugins\StandalonePlugins\Dependencies\Facepunch.Steamworks.Posix.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Steamworks.Posix64">
-      <HintPath>..\..\..\..\Raid Simulator\Standalone Plugins\StandalonePlugins\Dependencies\Facepunch.Steamworks.Posix64.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Steamworks.Win64">
-      <HintPath>..\..\deps\Facepunch.Steamworks.Win64.dll</HintPath>
+      <HintPath>..\..\deps\Facepunch.Steamworks.Posix.dll</HintPath>
     </Reference>
     <Reference Include="Facepunch.System">
       <HintPath>..\..\deps\Facepunch.System.dll</HintPath>
@@ -117,53 +112,8 @@
     <Reference Include="Facepunch.UnityEngine">
       <HintPath>..\..\deps\Facepunch.UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="Fleck">
-      <HintPath>..\..\deps\Fleck.dll</HintPath>
-    </Reference>
-    <Reference Include="GA">
-      <HintPath>..\..\deps\GA.dll</HintPath>
-    </Reference>
-    <Reference Include="I18N">
-      <HintPath>..\..\deps\I18N.dll</HintPath>
-    </Reference>
-    <Reference Include="I18N.CJK">
-      <HintPath>..\..\deps\I18N.CJK.dll</HintPath>
-    </Reference>
-    <Reference Include="I18N.MidEast">
-      <HintPath>..\..\deps\I18N.MidEast.dll</HintPath>
-    </Reference>
-    <Reference Include="I18N.Other">
-      <HintPath>..\..\deps\I18N.Other.dll</HintPath>
-    </Reference>
-    <Reference Include="I18N.Rare">
-      <HintPath>..\..\deps\I18N.Rare.dll</HintPath>
-    </Reference>
-    <Reference Include="I18N.West">
-      <HintPath>..\..\deps\I18N.West.dll</HintPath>
-    </Reference>
-    <Reference Include="Ionic.Zip.Reduced">
-      <HintPath>..\..\deps\Ionic.Zip.Reduced.dll</HintPath>
-    </Reference>
-    <Reference Include="LZ4">
-      <HintPath>..\..\deps\LZ4.dll</HintPath>
-    </Reference>
-    <Reference Include="LZ4pn">
-      <HintPath>..\..\deps\LZ4pn.dll</HintPath>
-    </Reference>
-    <Reference Include="MidiJack">
-      <HintPath>..\..\deps\MidiJack.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Data.Tds">
-      <HintPath>..\..\deps\Mono.Data.Tds.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Posix">
-      <HintPath>..\..\deps\Mono.Posix.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Security">
-      <HintPath>..\..\deps\Mono.Security.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.WebBrowser">
-      <HintPath>..\..\deps\Mono.WebBrowser.dll</HintPath>
+    <Reference Include="NewAssembly">
+      <HintPath>..\..\deps\NewAssembly.dll</HintPath>
     </Reference>
     <Reference Include="Oxide.Core">
       <HintPath>..\..\deps\Oxide.Core.dll</HintPath>
@@ -189,11 +139,32 @@
     <Reference Include="Rust.Data">
       <HintPath>..\..\deps\Rust.Data.dll</HintPath>
     </Reference>
+    <Reference Include="Rust.Demo">
+      <HintPath>..\..\deps\Rust.Demo.dll</HintPath>
+    </Reference>
     <Reference Include="Rust.Global">
       <HintPath>..\..\deps\Rust.Global.dll</HintPath>
     </Reference>
+    <Reference Include="Rust.Harmony">
+      <HintPath>..\..\deps\Rust.Harmony.dll</HintPath>
+    </Reference>
     <Reference Include="Rust.Localization">
-      <HintPath>..\..\..\..\Raid Simulator\Standalone Plugins\StandalonePlugins\Dependencies\Rust.Localization.dll</HintPath>
+      <HintPath>..\..\deps\Rust.Localization.dll</HintPath>
+    </Reference>
+    <Reference Include="Rust.Platform">
+      <HintPath>..\..\deps\Rust.Platform.dll</HintPath>
+    </Reference>
+    <Reference Include="Rust.Platform.Common">
+      <HintPath>..\..\deps\Rust.Platform.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Rust.Platform.Steam">
+      <HintPath>..\..\deps\Rust.Platform.Steam.dll</HintPath>
+    </Reference>
+    <Reference Include="Rust.UI">
+      <HintPath>..\..\deps\Rust.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Rust.Workshop">
+      <HintPath>..\..\deps\Rust.Workshop.dll</HintPath>
     </Reference>
     <Reference Include="Rust.World">
       <HintPath>..\..\deps\Rust.World.dll</HintPath>
@@ -206,9 +177,6 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="Unity.TextMeshPro">
-      <HintPath>..\..\deps\Unity.TextMeshPro.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\deps\UnityEngine.dll</HintPath>
     </Reference>
@@ -223,9 +191,6 @@
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
       <HintPath>..\..\deps\UnityEngine.AnimationModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ARModule">
-      <HintPath>..\..\deps\UnityEngine.ARModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule">
       <HintPath>..\..\deps\UnityEngine.AssetBundleModule.dll</HintPath>
@@ -394,7 +359,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ServerMetrics.cs" />
+    <Compile Include="Config\ConfigData.cs" />
+    <Compile Include="Harmony\BasePlayer\OnDisconnected_Patch.cs" />
+    <Compile Include="Harmony\BasePlayer\PlayerInit_Patch.cs" />
+    <Compile Include="Harmony\Bootstrap\StartServer.cs" />
+    <Compile Include="Harmony\NetWrite\Send_Patch.cs" />
+    <Compile Include="Harmony\NetWrite\PacketID_Patch.cs" />
+    <Compile Include="Harmony\Performance\FPSTimer_Patch.cs" />
+    <Compile Include="MetricsLogger.cs" />
+    <Compile Include="ReportUploader.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
