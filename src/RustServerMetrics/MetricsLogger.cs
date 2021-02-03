@@ -142,7 +142,14 @@ namespace RustServerMetrics
         internal void OnNetWriteSend(SendInfo sendInfo)
         {
             if (!_ready) return;
-            _networkUpdates[_lastMessageType] += sendInfo.connection != null ? 1 : sendInfo.connections.Count;
+            if (sendInfo.connection != null)
+            {
+                _networkUpdates[_lastMessageType] += 1;
+            }
+            else if (sendInfo.connections != null)
+            {
+                _networkUpdates[_lastMessageType] += sendInfo.connections.Count;
+            }
         }
 
         void LogNetworkUpdates()
