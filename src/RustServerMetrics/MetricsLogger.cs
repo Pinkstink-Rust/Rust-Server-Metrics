@@ -156,6 +156,7 @@ namespace RustServerMetrics
         {
             if (_networkUpdates.Count < 1) return;
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+            _stringBuilder.Clear();
             _stringBuilder.Append("network_updates,server=");
             _stringBuilder.Append(_configuration.serverTag);
             _stringBuilder.Append(" ");
@@ -180,7 +181,6 @@ namespace RustServerMetrics
             _stringBuilder.Append(" ");
             _stringBuilder.Append(epochNow);
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            _stringBuilder.Clear();
 
             var enumKeys = _networkUpdates.Keys.ToArray();
             foreach (var key in enumKeys)
@@ -192,6 +192,7 @@ namespace RustServerMetrics
         void GatherPlayerSecondStats(BasePlayer player)
         {
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+            _stringBuilder.Clear();
             _stringBuilder.Append("connection_latency,server=");
             _stringBuilder.Append(_configuration.serverTag);
             _stringBuilder.Append(",steamid=");
@@ -207,7 +208,6 @@ namespace RustServerMetrics
             _stringBuilder.Append("i ");
             _stringBuilder.Append(epochNow);
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            _stringBuilder.Clear();
         }
 
         internal void OnPerformanceReportGenerated()
@@ -216,6 +216,7 @@ namespace RustServerMetrics
             var current = Performance.current;
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
 
+            _stringBuilder.Clear();
             _stringBuilder.Append("framerate,server=");
             _stringBuilder.Append(_configuration.serverTag);
             _stringBuilder.Append(" instant=");
@@ -297,7 +298,6 @@ namespace RustServerMetrics
             _stringBuilder.Append("i ");
             _stringBuilder.Append(epochNow);
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            _stringBuilder.Clear();
         }
 
         bool ValidateConfiguration()
