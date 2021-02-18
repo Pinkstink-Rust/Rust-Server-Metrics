@@ -2,30 +2,28 @@
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
-namespace RustServerMetrics.Harmony.NetWrite
+namespace RustServerMetrics.Harmony.TimeWarning
 {
-    [HarmonyPatch(typeof(Network.NetWrite), nameof(Network.NetWrite.PacketID))]
-    public class PacketID_Patch
+    [HarmonyPatch(typeof(global::TimeWarning), nameof(global::TimeWarning.New))]
+    public static class New_Patch
     {
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> originalInstructions)
         {
-            List<CodeInstruction> retList = new List<CodeInstruction>(originalInstructions);
-
             var fieldInfo = typeof(SingletonComponent<MetricsLogger>)
                 .GetField(nameof(SingletonComponent<MetricsLogger>.Instance), System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
 
             var methodInfo = typeof(MetricsLogger)
-                .GetMethod(nameof(MetricsLogger.OnNetWritePacketID), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                .GetMethod(nameof(MetricsLogger.OnNewTimeWarning), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 
-            retList.InsertRange(retList.Count - 1, new List<CodeInstruction>
+            return new List<CodeInstruction>
             {
                 new CodeInstruction(OpCodes.Ldsfld, fieldInfo),
+                new CodeInstruction(OpCodes.Ldarg_0),
                 new CodeInstruction(OpCodes.Ldarg_1),
-                new CodeInstruction(OpCodes.Call, methodInfo)
-            });
-
-            return retList;
+                new CodeInstruction(OpCodes.Call, methodInfo),
+                new CodeInstruction(OpCodes.Ret)
+            };
         }
     }
 }

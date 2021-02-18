@@ -2,12 +2,10 @@
 using Newtonsoft.Json;
 using RustServerMetrics.Config;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace RustServerMetrics
@@ -15,7 +13,6 @@ namespace RustServerMetrics
     public class MetricsLogger : SingletonComponent<MetricsLogger>
     {
         const string CONFIGURATION_PATH = "HarmonyMods_Data/ServerMetrics/Configuration.json";
-        const string COMMAND_PREFIX = "servermetrics";
         readonly StringBuilder _stringBuilder = new StringBuilder();
         readonly Dictionary<ulong, Action> _playerStatsActions = new Dictionary<ulong, Action>();
         readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
@@ -73,17 +70,25 @@ namespace RustServerMetrics
 
         void RegisterCommands()
         {
+            const string commandPrefix = "servermetrics";
             ConsoleSystem.Command reloadCommand = new ConsoleSystem.Command()
             {
                 Name = "reload",
-                Parent = COMMAND_PREFIX,
-                FullName = COMMAND_PREFIX + "." + "reload",
+                Parent = commandPrefix,
+                FullName = commandPrefix + "." + "reload",
                 ServerAdmin = true,
                 Variable = false,
                 Call = new Action<ConsoleSystem.Arg>(ReloadCommand)
             };
-            ConsoleSystem.Index.Server.Dict[COMMAND_PREFIX + "." + "reload"] = reloadCommand;
-            ConsoleSystem.Index.All = ConsoleSystem.Index.Server.Dict.Values.ToArray();
+
+            ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "reload"] = reloadCommand;
+            var allCommands = ConsoleSystem.Index.All;
+            Array.Resize(ref allCommands, allCommands.Length + 1);
+            allCommands[allCommands.Length - 1] = reloadCommand;
+            // Would be nice if this had a public setter, or better yet, a register command helper
+            typeof(ConsoleSystem.Index)
+                .GetProperty(nameof(ConsoleSystem.Index.All), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                .SetValue(null, allCommands);
         }
 
         private void ReloadCommand(ConsoleSystem.Arg arg)
@@ -298,6 +303,19 @@ namespace RustServerMetrics
             _stringBuilder.Append("i ");
             _stringBuilder.Append(epochNow);
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
+        }
+
+        // This method presently does nothing as we are awaiting a Harmony2 upgrade from Facepunch
+        internal TimeWarning OnNewTimeWarning(string name, int maxmilliseconds)
+        {
+            Debug.Log("OnNewTimeWarning: " + name);
+            return null;
+        }
+
+        // This method presently does nothing as we are awaiting a Harmony2 upgrade from Facepunch
+        internal void OnDisposeTimeWarning(TimeWarning instance)
+        {
+            Debug.Log("OnTimeWarningDispose");
         }
 
         bool ValidateConfiguration()

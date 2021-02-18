@@ -1,9 +1,5 @@
 ﻿using Harmony;
-using Network;
-using Oxide.Core;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection.Emit;
 
 namespace RustServerMetrics.Harmony.NetWrite

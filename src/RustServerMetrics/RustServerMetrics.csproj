@@ -61,9 +61,6 @@
     <Reference Include="CurvedTextMeshPro">
       <HintPath>..\..\deps\CurvedTextMeshPro.dll</HintPath>
     </Reference>
-    <Reference Include="DryWetMidi">
-      <HintPath>..\..\deps\DryWetMidi.dll</HintPath>
-    </Reference>
     <Reference Include="EasyAntiCheat.Client">
       <HintPath>..\..\deps\EasyAntiCheat.Client.dll</HintPath>
     </Reference>
@@ -100,9 +97,6 @@
     <Reference Include="Facepunch.SteamNetworking">
       <HintPath>..\..\deps\Facepunch.SteamNetworking.dll</HintPath>
     </Reference>
-    <Reference Include="Facepunch.Steamworks.Posix">
-      <HintPath>..\..\deps\Facepunch.Steamworks.Posix.dll</HintPath>
-    </Reference>
     <Reference Include="Facepunch.System">
       <HintPath>..\..\deps\Facepunch.System.dll</HintPath>
     </Reference>
@@ -115,26 +109,9 @@
     <Reference Include="NewAssembly">
       <HintPath>..\..\deps\NewAssembly.dll</HintPath>
     </Reference>
-    <Reference Include="Oxide.Core">
-      <HintPath>..\..\deps\Oxide.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Oxide.CSharp">
-      <HintPath>..\..\deps\Oxide.CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Oxide.MySql">
-      <HintPath>..\..\deps\Oxide.MySql.dll</HintPath>
-    </Reference>
-    <Reference Include="Oxide.References">
-      <HintPath>..\..\deps\Oxide.References.dll</HintPath>
-    </Reference>
-    <Reference Include="Oxide.Rust">
-      <HintPath>..\..\deps\Oxide.Rust.dll</HintPath>
-    </Reference>
-    <Reference Include="Oxide.SQLite">
-      <HintPath>..\..\deps\Oxide.SQLite.dll</HintPath>
-    </Reference>
-    <Reference Include="Oxide.Unity">
-      <HintPath>..\..\deps\Oxide.Unity.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Vital-Shared\deps\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Rust.Data">
       <HintPath>..\..\deps\Rust.Data.dll</HintPath>
@@ -366,6 +343,8 @@
     <Compile Include="Harmony\NetWrite\Send_Patch.cs" />
     <Compile Include="Harmony\NetWrite\PacketID_Patch.cs" />
     <Compile Include="Harmony\Performance\FPSTimer_Patch.cs" />
+    <Compile Include="Harmony\TimeWarning\Dispose_Patch.cs" />
+    <Compile Include="Harmony\TimeWarning\New_Patch.cs" />
     <Compile Include="MetricsLogger.cs" />
     <Compile Include="ReportUploader.cs" />
   </ItemGroup>
