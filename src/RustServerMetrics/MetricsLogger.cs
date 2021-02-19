@@ -80,28 +80,43 @@ namespace RustServerMetrics
                 Variable = false,
                 Call = new Action<ConsoleSystem.Arg>(ReloadCommand)
             };
-
             ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "reload"] = reloadCommand;
-            var allCommands = ConsoleSystem.Index.All;
-            Array.Resize(ref allCommands, allCommands.Length + 1);
-            allCommands[allCommands.Length - 1] = reloadCommand;
+
+            ConsoleSystem.Command statusCommand = new ConsoleSystem.Command()
+            {
+                Name = "status",
+                Parent = commandPrefix,
+                FullName = commandPrefix + "." + "status",
+                ServerAdmin = true,
+                Variable = false,
+                Call = new Action<ConsoleSystem.Arg>(StatusCommand)
+            };
+            ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "status"] = statusCommand;
+
+            ConsoleSystem.Command[] allCommands = ConsoleSystem.Index.All.Concat(new ConsoleSystem.Command[] { reloadCommand, statusCommand }).ToArray();
             // Would be nice if this had a public setter, or better yet, a register command helper
             typeof(ConsoleSystem.Index)
                 .GetProperty(nameof(ConsoleSystem.Index.All), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
                 .SetValue(null, allCommands);
         }
 
-        private void ReloadCommand(ConsoleSystem.Arg arg)
+        void StatusCommand(ConsoleSystem.Arg arg)
+        {
+            _stringBuilder.Clear();
+            _stringBuilder.AppendLine("[ServerMetrics]: Status Overview");
+            _stringBuilder.Append("\tReady: "); _stringBuilder.Append(_ready); _stringBuilder.AppendLine();
+            _stringBuilder.AppendLine("\tReport Uploader:");
+            _stringBuilder.Append("\t\tRunning: "); _stringBuilder.Append(_reportUploader.IsRunning); _stringBuilder.AppendLine();
+            _stringBuilder.Append("\t\tIn Buffer: "); _stringBuilder.Append(_reportUploader.BufferSize); _stringBuilder.AppendLine();
+
+            arg.ReplyWith(_stringBuilder.ToString());
+        }
+
+        void ReloadCommand(ConsoleSystem.Arg arg)
         {
             LoadConfiguration();
             if (!ValidateConfiguration() || _configuration.enabled == false)
             {
-                if (!_configuration.enabled)
-                {
-                    Debug.LogWarning("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
-                    return;
-                }
-
                 _ready = false;
                 CancelInvoke(LogNetworkUpdates);
                 foreach (var player in _playerStatsActions)
@@ -111,6 +126,12 @@ namespace RustServerMetrics
                     basePlayer.CancelInvoke(player.Value);
                 }
                 _reportUploader.Stop();
+
+                if (!_configuration.enabled)
+                {
+                    Debug.LogWarning("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
+                    return;
+                }
             }
             else if (!_ready)
             {

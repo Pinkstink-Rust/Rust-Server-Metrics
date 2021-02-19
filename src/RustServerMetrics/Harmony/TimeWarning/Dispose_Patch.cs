@@ -7,6 +7,12 @@ namespace RustServerMetrics.Harmony.TimeWarning
     [HarmonyPatch(typeof(global::TimeWarning), nameof(global::TimeWarning.Dispose))]
     public static class Dispose_Patch
     {
+        /// <summary>
+        /// Disabled as this patch doesn't apply with Harmony v1, will enable with Harmony v2 upgrade
+        /// </summary>
+        [HarmonyPrepare]
+        public static bool Prepare(HarmonyInstance harmonyInstance) => false;
+
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> originalInstructions)
         {

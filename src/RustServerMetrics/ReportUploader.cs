@@ -21,6 +21,9 @@ namespace RustServerMetrics
         Uri _uri = null;
         MetricsLogger _metricsLogger;
 
+        public bool IsRunning => _isRunning;
+        public int BufferSize => _sendBuffer.Count;
+
         void Awake()
         {
             _metricsLogger = GetComponent<MetricsLogger>();
