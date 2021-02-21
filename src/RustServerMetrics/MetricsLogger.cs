@@ -1,4 +1,5 @@
-﻿using Network;
+﻿using Facepunch;
+using Network;
 using Newtonsoft.Json;
 using RustServerMetrics.Config;
 using System;
@@ -17,7 +18,7 @@ namespace RustServerMetrics
         readonly Dictionary<ulong, Action> _playerStatsActions = new Dictionary<ulong, Action>();
         readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
 
-        bool _ready = false;
+        public bool Ready { get; private set; }
         ConfigData _configuration;
         ReportUploader _reportUploader;
         Message.Type _lastMessageType;
@@ -39,6 +40,8 @@ namespace RustServerMetrics
         internal static void Initialize()
         {
             new GameObject().AddComponent<MetricsLogger>();
+            // Pool 100 Metrics Time Warnings
+            Pool.FillBuffer<MetricsTimeWarning>(100);
         }
 
         override protected void Awake()
@@ -64,23 +67,23 @@ namespace RustServerMetrics
                 }
 
                 InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.05f, 0.15f), 0.1f);
-                _ready = true;
+                Ready = true;
             }
         }
 
         void RegisterCommands()
         {
             const string commandPrefix = "servermetrics";
-            ConsoleSystem.Command reloadCommand = new ConsoleSystem.Command()
+            ConsoleSystem.Command reloadCfgCommand = new ConsoleSystem.Command()
             {
-                Name = "reload",
+                Name = "reloadcfg",
                 Parent = commandPrefix,
-                FullName = commandPrefix + "." + "reload",
+                FullName = commandPrefix + "." + "reloadcfg",
                 ServerAdmin = true,
                 Variable = false,
-                Call = new Action<ConsoleSystem.Arg>(ReloadCommand)
+                Call = new Action<ConsoleSystem.Arg>(ReloadCfgCommand)
             };
-            ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "reload"] = reloadCommand;
+            ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "reloadcfg"] = reloadCfgCommand;
 
             ConsoleSystem.Command statusCommand = new ConsoleSystem.Command()
             {
@@ -93,7 +96,7 @@ namespace RustServerMetrics
             };
             ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "status"] = statusCommand;
 
-            ConsoleSystem.Command[] allCommands = ConsoleSystem.Index.All.Concat(new ConsoleSystem.Command[] { reloadCommand, statusCommand }).ToArray();
+            ConsoleSystem.Command[] allCommands = ConsoleSystem.Index.All.Concat(new ConsoleSystem.Command[] { reloadCfgCommand, statusCommand }).ToArray();
             // Would be nice if this had a public setter, or better yet, a register command helper
             typeof(ConsoleSystem.Index)
                 .GetProperty(nameof(ConsoleSystem.Index.All), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
@@ -103,21 +106,22 @@ namespace RustServerMetrics
         void StatusCommand(ConsoleSystem.Arg arg)
         {
             _stringBuilder.Clear();
-            _stringBuilder.AppendLine("[ServerMetrics]: Status Overview");
-            _stringBuilder.Append("\tReady: "); _stringBuilder.Append(_ready); _stringBuilder.AppendLine();
-            _stringBuilder.AppendLine("\tReport Uploader:");
-            _stringBuilder.Append("\t\tRunning: "); _stringBuilder.Append(_reportUploader.IsRunning); _stringBuilder.AppendLine();
-            _stringBuilder.Append("\t\tIn Buffer: "); _stringBuilder.Append(_reportUploader.BufferSize); _stringBuilder.AppendLine();
+            _stringBuilder.AppendLine("[ServerMetrics]: Status");
+            _stringBuilder.AppendLine("Overview");
+            _stringBuilder.Append("\tReady: "); _stringBuilder.Append(Ready); _stringBuilder.AppendLine();
+            _stringBuilder.AppendLine("Report Uploader:");
+            _stringBuilder.Append("\tRunning: "); _stringBuilder.Append(_reportUploader.IsRunning); _stringBuilder.AppendLine();
+            _stringBuilder.Append("\tIn Buffer: "); _stringBuilder.Append(_reportUploader.BufferSize); _stringBuilder.AppendLine();
 
             arg.ReplyWith(_stringBuilder.ToString());
         }
 
-        void ReloadCommand(ConsoleSystem.Arg arg)
+        void ReloadCfgCommand(ConsoleSystem.Arg arg)
         {
             LoadConfiguration();
             if (!ValidateConfiguration() || _configuration.enabled == false)
             {
-                _ready = false;
+                Ready = false;
                 CancelInvoke(LogNetworkUpdates);
                 foreach (var player in _playerStatsActions)
                 {
@@ -129,13 +133,13 @@ namespace RustServerMetrics
 
                 if (!_configuration.enabled)
                 {
-                    Debug.LogWarning("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
+                    arg.ReplyWith("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
                     return;
                 }
             }
-            else if (!_ready)
+            else if (!Ready)
             {
-                _ready = true;
+                Ready = true;
                 foreach (var player in BasePlayer.activePlayerList) OnPlayerInit(player);
                 InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.05f, 0.15f), 0.1f);
             }
@@ -144,7 +148,7 @@ namespace RustServerMetrics
 
         internal void OnPlayerInit(BasePlayer player)
         {
-            if (!_ready) return;
+            if (!Ready) return;
             var action = new Action(() => GatherPlayerSecondStats(player));
             if (_playerStatsActions.ContainsKey(player.userID))
                 player.CancelInvoke(_playerStatsActions[player.userID]);
@@ -154,20 +158,20 @@ namespace RustServerMetrics
 
         internal void OnPlayerDisconnected(BasePlayer player)
         {
-            if (!_ready) return;
+            if (!Ready) return;
             player.CancelInvoke(_playerStatsActions[player.userID]);
             _playerStatsActions.Remove(player.userID);
         }
 
         internal void OnNetWritePacketID(Message.Type messageType)
         {
-            if (!_ready) return;
+            if (!Ready) return;
             _lastMessageType = messageType;
         }
 
         internal void OnNetWriteSend(SendInfo sendInfo)
         {
-            if (!_ready) return;
+            if (!Ready) return;
             if (sendInfo.connection != null)
             {
                 _networkUpdates[_lastMessageType] += 1;
@@ -238,7 +242,7 @@ namespace RustServerMetrics
 
         internal void OnPerformanceReportGenerated()
         {
-            if (!_ready) return;
+            if (!Ready) return;
             var current = Performance.current;
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
 
@@ -326,18 +330,7 @@ namespace RustServerMetrics
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
         }
 
-        // This method presently does nothing as we are awaiting a Harmony2 upgrade from Facepunch
-        internal TimeWarning OnNewTimeWarning(string name, int maxmilliseconds)
-        {
-            Debug.Log("OnNewTimeWarning: " + name);
-            return null;
-        }
-
-        // This method presently does nothing as we are awaiting a Harmony2 upgrade from Facepunch
-        internal void OnDisposeTimeWarning(TimeWarning instance)
-        {
-            Debug.Log("OnTimeWarningDispose");
-        }
+        internal TimeWarning OnNewTimeWarning(string name, int maxMilliseconds) => MetricsTimeWarning.GetTimeWarning(name, maxMilliseconds);
 
         bool ValidateConfiguration()
         {

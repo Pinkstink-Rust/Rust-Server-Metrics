@@ -1,13 +1,13 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace RustServerMetrics.Harmony.BasePlayer
+namespace RustServerMetrics.HarmonyPatches
 {
-    [HarmonyPatch(typeof(global::BasePlayer), nameof(global::BasePlayer.PlayerInit))]
-    public class PlayerInit_Patch
+    [HarmonyPatch(typeof(BasePlayer), nameof(BasePlayer.PlayerInit))]
+    public class BasePlayer_PlayerInit_Patch
     {
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> originalInstructions)
@@ -15,10 +15,10 @@ namespace RustServerMetrics.Harmony.BasePlayer
             List<CodeInstruction> retList = new List<CodeInstruction>(originalInstructions);
 
             var fieldInfo = typeof(SingletonComponent<MetricsLogger>)
-                .GetField(nameof(SingletonComponent<MetricsLogger>.Instance), System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+                .GetField(nameof(SingletonComponent<MetricsLogger>.Instance), BindingFlags.Static | BindingFlags.Public);
 
             var methodInfo = typeof(MetricsLogger)
-                .GetMethod(nameof(MetricsLogger.OnPlayerInit), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                .GetMethod(nameof(MetricsLogger.OnPlayerInit), BindingFlags.Instance | BindingFlags.NonPublic);
 
             var idx = retList.FindIndex(x => x.opcode == OpCodes.Call && x.operand is MethodInfo methodInfo1 && methodInfo1.DeclaringType.Name == "EACServer" && methodInfo1.Name == "OnStartLoading");
 

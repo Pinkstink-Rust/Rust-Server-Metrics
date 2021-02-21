@@ -37,7 +37,10 @@
   </Target>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\deps\0Harmony.dll</HintPath>
+      <HintPath>..\..\harmony2_override\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Rust.Harmony">
+      <HintPath>..\..\harmony2_override\Rust.Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Accessibility" />
     <Reference Include="ApexAI">
@@ -121,9 +124,6 @@
     </Reference>
     <Reference Include="Rust.Global">
       <HintPath>..\..\deps\Rust.Global.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Harmony">
-      <HintPath>..\..\deps\Rust.Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Rust.Localization">
       <HintPath>..\..\deps\Rust.Localization.dll</HintPath>
@@ -337,15 +337,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\ConfigData.cs" />
-    <Compile Include="Harmony\BasePlayer\OnDisconnected_Patch.cs" />
-    <Compile Include="Harmony\BasePlayer\PlayerInit_Patch.cs" />
-    <Compile Include="Harmony\Bootstrap\StartServer.cs" />
-    <Compile Include="Harmony\NetWrite\Send_Patch.cs" />
-    <Compile Include="Harmony\NetWrite\PacketID_Patch.cs" />
-    <Compile Include="Harmony\Performance\FPSTimer_Patch.cs" />
-    <Compile Include="Harmony\TimeWarning\Dispose_Patch.cs" />
-    <Compile Include="Harmony\TimeWarning\New_Patch.cs" />
+    <Compile Include="HarmonyPatches\BasePlayer_OnDisconnected_Patch.cs" />
+    <Compile Include="HarmonyPatches\BasePlayer_PlayerInit_Patch.cs" />
+    <Compile Include="HarmonyPatches\Bootstrap_StartServer_Patch.cs" />
+    <Compile Include="HarmonyPatches\NetWrite_Send_Patch.cs" />
+    <Compile Include="HarmonyPatches\NetWrite_PacketID_Patch.cs" />
+    <Compile Include="HarmonyPatches\Performance_FPSTimer_Patch.cs" />
+    <Compile Include="HarmonyPatches\TimeWarning_Dispose_Patch.cs" />
+    <Compile Include="HarmonyPatches\TimeWarning_New_Patch.cs" />
     <Compile Include="MetricsLogger.cs" />
+    <Compile Include="MetricsTimeWarning.cs" />
     <Compile Include="ReportUploader.cs" />
   </ItemGroup>
   <ItemGroup>

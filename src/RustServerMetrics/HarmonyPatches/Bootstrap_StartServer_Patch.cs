@@ -1,15 +1,12 @@
-﻿using Harmony;
-using System;
+﻿using HarmonyLib;
 using System.Collections.Generic;
-using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace RustServerMetrics.Harmony.Bootstrap
+namespace RustServerMetrics.HarmonyPatches
 {
-    [HarmonyPatch(typeof(global::Bootstrap), nameof(global::Bootstrap.StartServer))]
-    public class StartServer_Patch
+    [HarmonyPatch(typeof(Bootstrap), nameof(Bootstrap.StartServer))]
+    public class Bootstrap_StartServer_Patch
     {
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> originalInstructions)
@@ -17,7 +14,7 @@ namespace RustServerMetrics.Harmony.Bootstrap
             List<CodeInstruction> retList = new List<CodeInstruction>(originalInstructions);
 
             var methodInfo = typeof(MetricsLogger)
-                .GetMethod(nameof(MetricsLogger.Initialize), System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+                .GetMethod(nameof(MetricsLogger.Initialize), BindingFlags.Static | BindingFlags.NonPublic);
 
             retList.InsertRange(0, new List<CodeInstruction>
             {
