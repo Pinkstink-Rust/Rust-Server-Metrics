@@ -73,15 +73,18 @@ namespace RustServerMetrics
             var request = new UnityWebRequest(_uri, UnityWebRequest.kHttpVerbPOST)
             {
                 uploadHandler = new UploadHandlerRaw(_data),
-                downloadHandler = new DownloadHandlerBuffer()
+                downloadHandler = new DownloadHandlerBuffer(),
+                timeout = 5,
+                useHttpContinue = true,
+                redirectLimit = 5
             };
             yield return request.SendWebRequest();
 
             if (request.isNetworkError)
             {
-                if (_attempt >= 5)
+                if (_attempt >= 2)
                 {
-                    Debug.LogError($"Error submitting metric: 5 consecutive network failures");
+                    Debug.LogError($"Error submitting metric: 2 consecutive network failures");
                     yield break;
                 }
 
@@ -93,7 +96,7 @@ namespace RustServerMetrics
             if (request.isHttpError)
             {
                 Debug.LogError($"Error submitting metric: {request.error}");
-                Debug.LogError(request.downloadHandler.text);
+                if (_metricsLogger.DebugLogging) Debug.LogError(request.downloadHandler.text);
                 yield break;
             }
         }

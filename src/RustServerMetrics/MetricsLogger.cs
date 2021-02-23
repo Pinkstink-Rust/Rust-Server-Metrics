@@ -24,6 +24,7 @@ namespace RustServerMetrics
         Message.Type _lastMessageType;
         Uri _baseUri;
 
+        public bool DebugLogging => _configuration?.debugLogging == true;
         public Uri BaseUri
         {
             get

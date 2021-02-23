@@ -27,5 +27,8 @@ namespace RustServerMetrics.Config
 
         [JsonProperty(PropertyName = "Server Tag")]
         public string serverTag = DEFAULT_SERVER_TAG;
+
+        [JsonProperty(PropertyName = "Debug Logging")]
+        public bool debugLogging = true;
     }
 }
