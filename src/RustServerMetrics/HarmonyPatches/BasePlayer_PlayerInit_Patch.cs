@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+﻿using Harmony;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -24,7 +24,7 @@ namespace RustServerMetrics.HarmonyPatches
 
             if (idx < 0) throw new Exception("Failed to find the insertion index for PlayerInit");
 
-            retList.InsertRange(idx, new List<CodeInstruction>
+            retList.InsertRange(idx, new CodeInstruction[]
             {
                 new CodeInstruction(OpCodes.Ldsfld, fieldInfo),
                 new CodeInstruction(OpCodes.Ldarg_0),

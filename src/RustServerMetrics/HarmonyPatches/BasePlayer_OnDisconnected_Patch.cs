@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+﻿using Harmony;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -19,7 +19,7 @@ namespace RustServerMetrics.HarmonyPatches
             var methodInfo = typeof(MetricsLogger)
                 .GetMethod(nameof(MetricsLogger.OnPlayerDisconnected), BindingFlags.Instance | BindingFlags.NonPublic);
 
-            retList.InsertRange(0, new List<CodeInstruction>
+            retList.InsertRange(0, new CodeInstruction[]
             {
                 new CodeInstruction(OpCodes.Ldsfld, fieldInfo),
                 new CodeInstruction(OpCodes.Ldarg_0),

@@ -1,11 +1,11 @@
-﻿using HarmonyLib;
+﻿using Harmony;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace RustServerMetrics.HarmonyPatches
 {
-    [HarmonyPatch(typeof(TimeWarning), nameof(TimeWarning.Dispose))]
+    //[HarmonyPatch(typeof(TimeWarning), nameof(TimeWarning.Dispose))]
     public static class TimeWarning_Dispose_Patch
     {
         [HarmonyTranspiler]

@@ -1,11 +1,11 @@
-﻿using HarmonyLib;
+﻿using Harmony;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace RustServerMetrics.HarmonyPatches
 {
-    [HarmonyPatch(typeof(TimeWarning), nameof(TimeWarning.New))]
+    //[HarmonyPatch(typeof(TimeWarning), nameof(TimeWarning.New))]
     public static class TimeWarning_New_Patch
     {
         [HarmonyTranspiler]
@@ -14,7 +14,7 @@ namespace RustServerMetrics.HarmonyPatches
             var methodInfo = typeof(MetricsTimeWarning)
                 .GetMethod(nameof(MetricsTimeWarning.GetTimeWarning), BindingFlags.Static | BindingFlags.Public);
 
-            return new List<CodeInstruction>
+            return new CodeInstruction[]
             {
                 new CodeInstruction(OpCodes.Ldarg_0),
                 new CodeInstruction(OpCodes.Ldarg_1),

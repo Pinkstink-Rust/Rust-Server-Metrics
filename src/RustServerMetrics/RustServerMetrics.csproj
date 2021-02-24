@@ -37,10 +37,7 @@
   </Target>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\harmony2_override\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Harmony">
-      <HintPath>..\..\harmony2_override\Rust.Harmony.dll</HintPath>
+      <HintPath>..\..\deps\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Accessibility" />
     <Reference Include="ApexAI">

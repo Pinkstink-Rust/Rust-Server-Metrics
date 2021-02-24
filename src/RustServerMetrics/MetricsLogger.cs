@@ -110,7 +110,7 @@ namespace RustServerMetrics
             _stringBuilder.AppendLine("[ServerMetrics]: Status");
             _stringBuilder.AppendLine("Overview");
             _stringBuilder.Append("\tReady: "); _stringBuilder.Append(Ready); _stringBuilder.AppendLine();
-            _stringBuilder.AppendLine("Report Uploader:");
+            _stringBuilder.AppendLine("Report Uploader:"); 
             _stringBuilder.Append("\tRunning: "); _stringBuilder.Append(_reportUploader.IsRunning); _stringBuilder.AppendLine();
             _stringBuilder.Append("\tIn Buffer: "); _stringBuilder.Append(_reportUploader.BufferSize); _stringBuilder.AppendLine();
 
@@ -330,8 +330,6 @@ namespace RustServerMetrics
             _stringBuilder.Append(epochNow);
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
         }
-
-        internal TimeWarning OnNewTimeWarning(string name, int maxMilliseconds) => MetricsTimeWarning.GetTimeWarning(name, maxMilliseconds);
 
         bool ValidateConfiguration()
         {
