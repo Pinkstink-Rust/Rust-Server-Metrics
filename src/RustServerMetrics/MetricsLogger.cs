@@ -19,20 +19,20 @@ namespace RustServerMetrics
         readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
 
         public bool Ready { get; private set; }
-        ConfigData _configuration;
+        internal ConfigData Configuration { get; private set; }
         ReportUploader _reportUploader;
         Message.Type _lastMessageType;
         Uri _baseUri;
 
-        public bool DebugLogging => _configuration?.debugLogging == true;
+        public bool DebugLogging => Configuration?.debugLogging == true;
         public Uri BaseUri
         {
             get
             {
                 if (_baseUri == null)
                 {
-                    var uri = new Uri(_configuration.databaseUrl);
-                    _baseUri = new Uri(uri, $"/write?db={_configuration.databaseName}&precision=ms&u={_configuration.databaseUser}&p={_configuration.databasePassword}");
+                    var uri = new Uri(Configuration.databaseUrl);
+                    _baseUri = new Uri(uri, $"/write?db={Configuration.databaseName}&precision=ms&u={Configuration.databaseUser}&p={Configuration.databasePassword}");
                 }
                 return _baseUri;
             }
@@ -61,7 +61,7 @@ namespace RustServerMetrics
             LoadConfiguration();
             if (ValidateConfiguration())
             {
-                if (!_configuration.enabled)
+                if (!Configuration.enabled)
                 {
                     Debug.LogWarning("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
                     return;
@@ -110,7 +110,7 @@ namespace RustServerMetrics
             _stringBuilder.AppendLine("[ServerMetrics]: Status");
             _stringBuilder.AppendLine("Overview");
             _stringBuilder.Append("\tReady: "); _stringBuilder.Append(Ready); _stringBuilder.AppendLine();
-            _stringBuilder.AppendLine("Report Uploader:"); 
+            _stringBuilder.AppendLine("Report Uploader:");
             _stringBuilder.Append("\tRunning: "); _stringBuilder.Append(_reportUploader.IsRunning); _stringBuilder.AppendLine();
             _stringBuilder.Append("\tIn Buffer: "); _stringBuilder.Append(_reportUploader.BufferSize); _stringBuilder.AppendLine();
 
@@ -120,7 +120,7 @@ namespace RustServerMetrics
         void ReloadCfgCommand(ConsoleSystem.Arg arg)
         {
             LoadConfiguration();
-            if (!ValidateConfiguration() || _configuration.enabled == false)
+            if (!ValidateConfiguration() || Configuration.enabled == false)
             {
                 Ready = false;
                 CancelInvoke(LogNetworkUpdates);
@@ -132,7 +132,7 @@ namespace RustServerMetrics
                 }
                 _reportUploader.Stop();
 
-                if (!_configuration.enabled)
+                if (!Configuration.enabled)
                 {
                     arg.ReplyWith("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
                     return;
@@ -189,7 +189,7 @@ namespace RustServerMetrics
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             _stringBuilder.Clear();
             _stringBuilder.Append("network_updates,server=");
-            _stringBuilder.Append(_configuration.serverTag);
+            _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(" ");
 
             var enumerator = _networkUpdates.GetEnumerator();
@@ -225,7 +225,7 @@ namespace RustServerMetrics
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             _stringBuilder.Clear();
             _stringBuilder.Append("connection_latency,server=");
-            _stringBuilder.Append(_configuration.serverTag);
+            _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(",steamid=");
             _stringBuilder.Append(player.UserIDString);
             _stringBuilder.Append(",ip=");
@@ -249,7 +249,7 @@ namespace RustServerMetrics
 
             _stringBuilder.Clear();
             _stringBuilder.Append("framerate,server=");
-            _stringBuilder.Append(_configuration.serverTag);
+            _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(" instant=");
             _stringBuilder.Append(current.frameRate);
             _stringBuilder.Append(",average=");
@@ -259,7 +259,7 @@ namespace RustServerMetrics
             _stringBuilder.Append("\n");
 
             _stringBuilder.Append("frametime,server=");
-            _stringBuilder.Append(_configuration.serverTag);
+            _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(" instant=");
             _stringBuilder.Append(current.frameTime);
             _stringBuilder.Append(",average=");
@@ -269,7 +269,7 @@ namespace RustServerMetrics
             _stringBuilder.Append("\n");
 
             _stringBuilder.Append("memory,server=");
-            _stringBuilder.Append(_configuration.serverTag);
+            _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(" used=");
             _stringBuilder.Append(current.memoryUsageSystem);
             _stringBuilder.Append("i,collections=");
@@ -283,7 +283,7 @@ namespace RustServerMetrics
             _stringBuilder.Append("\n");
 
             _stringBuilder.Append("tasks,server=");
-            _stringBuilder.Append(_configuration.serverTag);
+            _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(" load_balancer=");
             _stringBuilder.Append(current.loadBalancerTasks);
             _stringBuilder.Append("i,invoke_handler=");
@@ -299,7 +299,7 @@ namespace RustServerMetrics
             var packetLossLastSecond = Net.sv.GetStat(null, BaseNetwork.StatTypeLong.PacketLossLastSecond);
 
             _stringBuilder.Append("network,server=");
-            _stringBuilder.Append(_configuration.serverTag);
+            _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(" bytes_received=");
             _stringBuilder.Append(bytesReceivedLastSecond);
             _stringBuilder.Append("i,bytes_sent=");
@@ -311,7 +311,7 @@ namespace RustServerMetrics
             _stringBuilder.Append("\n");
 
             _stringBuilder.Append("players,server=");
-            _stringBuilder.Append(_configuration.serverTag);
+            _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(" count=");
             _stringBuilder.Append(BasePlayer.activePlayerList.Count);
             _stringBuilder.Append("i,joining=");
@@ -323,7 +323,7 @@ namespace RustServerMetrics
             _stringBuilder.Append("\n");
 
             _stringBuilder.Append("entities,server=");
-            _stringBuilder.Append(_configuration.serverTag);
+            _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(" count=");
             _stringBuilder.Append(BaseNetworkable.serverEntities.Count);
             _stringBuilder.Append("i ");
@@ -333,22 +333,22 @@ namespace RustServerMetrics
 
         bool ValidateConfiguration()
         {
-            if (_configuration == null) return false;
+            if (Configuration == null) return false;
 
             bool valid = true;
-            if (_configuration.databaseUrl == ConfigData.DEFAULT_INFLUX_DB_URL)
+            if (Configuration.databaseUrl == ConfigData.DEFAULT_INFLUX_DB_URL)
             {
                 Debug.LogError("[ServerMetrics]: Default database url detected in configuration, loading aborted");
                 valid = false;
             }
 
-            if (_configuration.databaseName == ConfigData.DEFAULT_INFLUX_DB_NAME)
+            if (Configuration.databaseName == ConfigData.DEFAULT_INFLUX_DB_NAME)
             {
                 Debug.LogError("[ServerMetrics]: Default database name detected in configuration, loading aborted");
                 valid = false;
             }
 
-            if (_configuration.serverTag == ConfigData.DEFAULT_SERVER_TAG)
+            if (Configuration.serverTag == ConfigData.DEFAULT_SERVER_TAG)
             {
                 Debug.LogError("[ServerMetrics]: Default server tag detected in configuration, loading aborted");
                 valid = false;
@@ -362,15 +362,15 @@ namespace RustServerMetrics
             try
             {
                 var configStr = File.ReadAllText(CONFIGURATION_PATH);
-                _configuration = JsonConvert.DeserializeObject<ConfigData>(configStr);
-                if (_configuration == null) _configuration = new ConfigData();
-                var uri = new Uri(_configuration.databaseUrl);
-                _baseUri = new Uri(uri, $"/write?db={_configuration.databaseName}&precision=ms&u={_configuration.databaseUser}&p={_configuration.databasePassword}");
+                Configuration = JsonConvert.DeserializeObject<ConfigData>(configStr);
+                if (Configuration == null) Configuration = new ConfigData();
+                var uri = new Uri(Configuration.databaseUrl);
+                _baseUri = new Uri(uri, $"/write?db={Configuration.databaseName}&precision=ms&u={Configuration.databaseUser}&p={Configuration.databasePassword}");
             }
             catch
             {
                 Debug.LogError("[ServerMetrics]: The configuration seems to be missing or malformed. Defaults will be loaded.");
-                _configuration = new ConfigData();
+                Configuration = new ConfigData();
 
                 if (File.Exists(CONFIGURATION_PATH))
                 {
@@ -386,7 +386,7 @@ namespace RustServerMetrics
             {
                 var configFileInfo = new FileInfo(CONFIGURATION_PATH);
                 if (!configFileInfo.Directory.Exists) configFileInfo.Directory.Create();
-                var serializedConfiguration = JsonConvert.SerializeObject(_configuration, Formatting.Indented);
+                var serializedConfiguration = JsonConvert.SerializeObject(Configuration, Formatting.Indented);
                 File.WriteAllText(CONFIGURATION_PATH, serializedConfiguration);
             }
             catch (Exception ex)

@@ -30,5 +30,8 @@ namespace RustServerMetrics.Config
 
         [JsonProperty(PropertyName = "Debug Logging")]
         public bool debugLogging = false;
+
+        [JsonProperty(PropertyName = "Amount of metrics to submit in each request")]
+        public ushort batchSize = 400;
     }
 }

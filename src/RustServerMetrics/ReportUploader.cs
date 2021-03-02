@@ -9,7 +9,6 @@ namespace RustServerMetrics
 {
     class ReportUploader : MonoBehaviour
     {
-        const int _batchAmount = 200;
         const int _sendBufferCapacity = 10000;
 
         readonly List<string> _sendBuffer = new List<string>(_sendBufferCapacity);
@@ -21,6 +20,7 @@ namespace RustServerMetrics
         Uri _uri = null;
         MetricsLogger _metricsLogger;
 
+        public ushort BatchSize => _metricsLogger.Configuration?.batchSize ?? 300;
         public bool IsRunning => _isRunning;
         public int BufferSize => _sendBuffer.Count;
 
@@ -52,7 +52,7 @@ namespace RustServerMetrics
 
             while (_sendBuffer.Count > 0 && _isRunning)
             {
-                int amountToTake = Mathf.Min(_sendBuffer.Count, _batchAmount);
+                int amountToTake = Mathf.Min(_sendBuffer.Count, BatchSize);
                 for (int i = 0; i < amountToTake; i++)
                 {
                     _payloadBuilder.Append(_sendBuffer[i]);

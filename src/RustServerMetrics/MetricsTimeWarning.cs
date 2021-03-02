@@ -1,5 +1,4 @@
 ﻿using Facepunch;
-using Facepunch.Math;
 using System;
 using System.Collections;
 using System.Text;
