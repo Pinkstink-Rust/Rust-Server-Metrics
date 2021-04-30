@@ -40,7 +40,9 @@
     <Reference Include="0Harmony">
       <HintPath>..\..\deps\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="Accessibility" />
+    <Reference Include="Accessibility">
+      <HintPath>..\..\deps\Accessibility.dll</HintPath>
+    </Reference>
     <Reference Include="ApexAI">
       <HintPath>..\..\deps\ApexAI.dll</HintPath>
     </Reference>
@@ -110,9 +112,8 @@
     <Reference Include="NewAssembly">
       <HintPath>..\..\deps\NewAssembly.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Vital-Shared\deps\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\deps\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Rust.Data">
       <HintPath>..\..\deps\Rust.Data.dll</HintPath>
@@ -144,14 +145,30 @@
     <Reference Include="Rust.World">
       <HintPath>..\..\deps\Rust.World.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System">
+      <HintPath>..\..\deps\System</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>..\..\deps\System.Core</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <HintPath>..\..\deps\System.Xml.Linq</HintPath>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <HintPath>..\..\deps\System.Data.DataSetExtensions</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+      <HintPath>..\..\deps\Microsoft.CSharp</HintPath>
+    </Reference>
+    <Reference Include="System.Data">
+      <HintPath>..\..\deps\System.Data</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http">
+      <HintPath>..\..\deps\System.Net.Http</HintPath>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>..\..\deps\System.Xml</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\deps\UnityEngine.dll</HintPath>
     </Reference>
