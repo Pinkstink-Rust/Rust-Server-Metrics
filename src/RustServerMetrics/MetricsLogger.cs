@@ -229,7 +229,9 @@ namespace RustServerMetrics
             _stringBuilder.Append(",steamid=");
             _stringBuilder.Append(player.UserIDString);
             _stringBuilder.Append(",ip=");
-            _stringBuilder.Append(player.net.connection.ipaddress);
+            var colonIndex = player.net.connection.ipaddress.LastIndexOf(':');
+            var portStrippedIp = player.net.connection.ipaddress.Substring(0, colonIndex);
+            _stringBuilder.Append(portStrippedIp);
             _stringBuilder.Append(" ping=");
             var averagePing = Net.sv.GetAveragePing(player.net.connection);
             _stringBuilder.Append(averagePing);
