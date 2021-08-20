@@ -37,7 +37,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1629489168050,
+  "iteration": 1629490208300,
   "links": [],
   "panels": [
     {
@@ -1849,7 +1849,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "server",
+              "operator": "=~",
+              "value": "/^$server$/"
+            }
+          ]
         }
       ],
       "thresholds": [],
@@ -1872,6 +1878,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:152",
           "decimals": 0,
           "format": "short",
           "label": "FPS",
@@ -1881,6 +1888,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:153",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1993,7 +2001,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "server",
+              "operator": "=~",
+              "value": "/^$server$/"
+            }
+          ]
         }
       ],
       "thresholds": [],
@@ -2384,7 +2398,7 @@
     "list": [
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "Vital-Rust-Metrics",
           "value": "Vital-Rust-Metrics"
         },
@@ -2448,5 +2462,5 @@
   "timezone": "browser",
   "title": "Vital Rust - Game Server Metrics",
   "uid": "nvZajLJGk",
-  "version": 87
+  "version": 89
 }
