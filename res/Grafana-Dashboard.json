@@ -37,7 +37,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1612230163788,
+  "iteration": 1629489168050,
   "links": [],
   "panels": [
     {
@@ -345,7 +345,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:299",
           "format": "short",
           "label": "Processing Time MS",
           "logBase": 1,
@@ -354,7 +353,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:300",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -530,7 +528,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:174",
           "decimals": 0,
           "format": "short",
           "label": "Count",
@@ -540,7 +537,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:175",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1718,7 +1714,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:106",
           "decimals": null,
           "format": "short",
           "label": null,
@@ -1728,7 +1723,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:107",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1762,6 +1756,296 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
+      "hiddenSeries": false,
+      "id": 30,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "hideEmpty": true,
+        "hideZero": false,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_server - $tag_steamid",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "steamid"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "server"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "client_performance",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "queryType": "randomWalk",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "fps"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Player FPS",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": 0,
+          "format": "short",
+          "label": "FPS",
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "decimals": 2,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "hiddenSeries": false,
+      "id": 32,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "hideEmpty": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_server - $tag_steamid",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "server"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "steamid"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "client_performance",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "queryType": "randomWalk",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "memory"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Player Memory",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1351",
+          "decimals": 2,
+          "format": "decmbytes",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1352",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
       "decimals": 1,
       "description": "",
       "fieldConfig": {
@@ -1773,10 +2057,10 @@
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 16,
-        "w": 24,
+        "h": 13,
+        "w": 12,
         "x": 0,
-        "y": 34
+        "y": 46
       },
       "hiddenSeries": false,
       "id": 15,
@@ -1786,7 +2070,7 @@
         "avg": true,
         "current": true,
         "hideEmpty": true,
-        "hideZero": true,
+        "hideZero": false,
         "max": true,
         "min": true,
         "show": true,
@@ -1937,13 +2221,13 @@
         },
         "overrides": []
       },
-      "fill": 1,
+      "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 15,
-        "w": 24,
-        "x": 0,
-        "y": 50
+        "h": 13,
+        "w": 12,
+        "x": 12,
+        "y": 46
       },
       "hiddenSeries": false,
       "id": 24,
@@ -1953,7 +2237,7 @@
         "avg": false,
         "current": true,
         "hideEmpty": true,
-        "hideZero": false,
+        "hideZero": true,
         "max": true,
         "min": false,
         "rightSide": false,
@@ -1976,8 +2260,8 @@
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      "stack": true,
+      "steppedLine": true,
       "targets": [
         {
           "alias": "$tag_server - $tag_steamid - $tag_ip",
@@ -2056,7 +2340,7 @@
       "timeShift": null,
       "title": "Player Packet Loss",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 2,
         "value_type": "individual"
       },
@@ -2070,7 +2354,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:430",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -2079,7 +2362,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:431",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -2094,7 +2376,7 @@
       }
     }
   ],
-  "refresh": "15s",
+  "refresh": "5s",
   "schemaVersion": 26,
   "style": "dark",
   "tags": [],
@@ -2116,7 +2398,7 @@
         "query": "influxdb",
         "queryValue": "",
         "refresh": 1,
-        "regex": "Vital-Rust-Metrics|Raid-Simulator-Metrics",
+        "regex": "Vital-Rust-Metrics|Raid-Simulator-Metrics|Spoonkid-Rust-Metrics",
         "skipUrlSync": false,
         "type": "datasource"
       },
@@ -2166,5 +2448,5 @@
   "timezone": "browser",
   "title": "Vital Rust - Game Server Metrics",
   "uid": "nvZajLJGk",
-  "version": 74
+  "version": 87
 }

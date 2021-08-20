@@ -353,6 +353,7 @@
   <ItemGroup>
     <Compile Include="Config\ConfigData.cs" />
     <Compile Include="HarmonyPatches\BasePlayer_OnDisconnected_Patch.cs" />
+    <Compile Include="HarmonyPatches\BasePlayer_PerformanceReport_Patch.cs" />
     <Compile Include="HarmonyPatches\BasePlayer_PlayerInit_Patch.cs" />
     <Compile Include="HarmonyPatches\Bootstrap_StartServer_Patch.cs" />
     <Compile Include="HarmonyPatches\NetWrite_Send_Patch.cs" />

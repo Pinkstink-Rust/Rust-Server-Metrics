@@ -17,6 +17,7 @@ namespace RustServerMetrics
         readonly StringBuilder _stringBuilder = new StringBuilder();
         readonly Dictionary<ulong, Action> _playerStatsActions = new Dictionary<ulong, Action>();
         readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
+        internal readonly HashSet<ulong> _requestedClientPerf = new HashSet<ulong>(1000);
 
         public bool Ready { get; private set; }
         internal ConfigData Configuration { get; private set; }
@@ -162,6 +163,7 @@ namespace RustServerMetrics
             if (!Ready) return;
             player.CancelInvoke(_playerStatsActions[player.userID]);
             _playerStatsActions.Remove(player.userID);
+            _requestedClientPerf.Remove(player.userID);
         }
 
         internal void OnNetWritePacketID(Message.Type messageType)
@@ -220,8 +222,34 @@ namespace RustServerMetrics
             }
         }
 
+        internal void OnClientPerformanceReport(BasePlayer player, int memory, int garbage, float fps, int uptime, bool streamerMode)
+        {
+            var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+            _stringBuilder.Clear();
+            _stringBuilder.Append("client_performance,server=");
+            _stringBuilder.Append(Configuration.serverTag);
+            _stringBuilder.Append(",steamid=");
+            _stringBuilder.Append(player.UserIDString);
+            _stringBuilder.Append(" memory=");
+            _stringBuilder.Append(memory);
+            _stringBuilder.Append("i,garbage=");
+            _stringBuilder.Append(garbage);
+            _stringBuilder.Append("i,fps=");
+            _stringBuilder.Append(fps);
+            _stringBuilder.Append(",uptime=");
+            _stringBuilder.Append(uptime);
+            _stringBuilder.Append("i,streamerMode=");
+            _stringBuilder.Append(streamerMode);
+            _stringBuilder.Append(" ");
+            _stringBuilder.Append(epochNow);
+            _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
+            _requestedClientPerf.Remove(player.userID);
+        }
+
         void GatherPlayerSecondStats(BasePlayer player)
         {
+            _requestedClientPerf.Add(player.userID);
+            player.ClientRPCPlayer(null, player, "GetPerformanceReport");
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             _stringBuilder.Clear();
             _stringBuilder.Append("connection_latency,server=");
