@@ -152,8 +152,8 @@ namespace RustServerMetrics
         {
             if (!Ready) return;
             var action = new Action(() => GatherPlayerSecondStats(player));
-            if (_playerStatsActions.ContainsKey(player.userID))
-                player.CancelInvoke(_playerStatsActions[player.userID]);
+            if (_playerStatsActions.TryGetValue(player.userID, out Action existingAction))
+                player.CancelInvoke(existingAction);
             _playerStatsActions[player.userID] = action;
             player.InvokeRepeating(action, UnityEngine.Random.Range(0.5f, 1.5f), 1f);
         }
@@ -248,8 +248,9 @@ namespace RustServerMetrics
 
         void GatherPlayerSecondStats(BasePlayer player)
         {
-            _requestedClientPerf.Add(player.userID);
-            player.ClientRPCPlayer(null, player, "GetPerformanceReport");
+            if (_requestedClientPerf.Add(player.userID))
+                player.ClientRPCPlayer(null, player, "GetPerformanceReport");
+
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             _stringBuilder.Clear();
             _stringBuilder.Append("connection_latency,server=");
