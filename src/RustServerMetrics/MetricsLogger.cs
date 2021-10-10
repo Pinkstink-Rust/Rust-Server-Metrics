@@ -222,6 +222,25 @@ namespace RustServerMetrics
             }
         }
 
+        internal void OnOxidePluginMetrics(Dictionary<string, double> metrics)
+        {
+            if (!Ready) return;
+            var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+            foreach (var metric in metrics)
+            {
+                _stringBuilder.Clear();
+                _stringBuilder.Append("oxide_plugins,server=");
+                _stringBuilder.Append(Configuration.serverTag);
+                _stringBuilder.Append(",plugin=\"");
+                _stringBuilder.Append(metric.Key);
+                _stringBuilder.Append("\" hookTime=");
+                _stringBuilder.Append(metric.Value);
+                _stringBuilder.Append(" ");
+                _stringBuilder.Append(epochNow);
+                _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
+            }
+        }
+
         internal void OnClientPerformanceReport(BasePlayer player, int memory, int garbage, float fps, int uptime, bool streamerMode)
         {
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();

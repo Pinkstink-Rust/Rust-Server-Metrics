@@ -358,6 +358,7 @@
     <Compile Include="HarmonyPatches\Bootstrap_StartServer_Patch.cs" />
     <Compile Include="HarmonyPatches\NetWrite_Send_Patch.cs" />
     <Compile Include="HarmonyPatches\NetWrite_PacketID_Patch.cs" />
+    <Compile Include="HarmonyPatches\OxideMod_OnFrame_Patch.cs" />
     <Compile Include="HarmonyPatches\Performance_FPSTimer_Patch.cs" />
     <Compile Include="HarmonyPatches\TimeWarning_Dispose_Patch.cs" />
     <Compile Include="HarmonyPatches\TimeWarning_New_Patch.cs" />
