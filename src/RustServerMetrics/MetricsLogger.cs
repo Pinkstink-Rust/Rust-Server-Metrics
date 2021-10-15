@@ -267,8 +267,11 @@ namespace RustServerMetrics
 
         void GatherPlayerSecondStats(BasePlayer player)
         {
-            if (_requestedClientPerf.Add(player.userID))
+            if (!player.IsReceivingSnapshot)
+            {
+                _requestedClientPerf.Add(player.userID);
                 player.ClientRPCPlayer(null, player, "GetPerformanceReport");
+            }
 
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             _stringBuilder.Clear();
