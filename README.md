@@ -32,7 +32,7 @@ A metrics gathering HarmonyMod for [Rust](https://playrust.com) game servers.
   "Influx Database Password": "my-super-secret-password-thats-a-decent-size",
   "Server Tag": "us-10x",
   "Debug Logging": false,
-  "Amount of metrics to submit in each request": 400
+  "Amount of metrics to submit in each request": 1000
 }
 ```
 
@@ -65,7 +65,9 @@ Setting this to true with output the raw HTTP response for failed submission att
 ### Amount of metrics to submit in each request
 This field configures exactly how many individual statistics records should be sent in each HTTP request, too high will result in sending of records taking large amounts of time and potentially causing FPS issues on your server, too low and the Mod will begin discarding records as they are being generated faster than they are being sent.
 
-> **NOTE**: 200 -> 600 pop servers have been tested without issue with this set to 400
+The minimum value this field can be set to it 1000.
+
+> **NOTE**: 200 -> 600 pop servers have been tested without issue with this set to 1000
 
 # Commands
 ### servermetrics.reloadcfg
@@ -76,6 +78,6 @@ This command will output whether the Mod is ready to collect metrics, whether th
 
 # Remarks
 ### Report Buffer Size
-The report buffer is hardcoded to a size of 10,000 reports, once this buffer size is exceeded, the Mod will begin to discard reports, of which will cause data to be missing from your Grafana dashboard.
+The report buffer is hardcoded to a size of 100,000 reports, once this buffer size is exceeded, the Mod will begin to discard reports, of which will cause data to be missing from your Grafana dashboard.
 
 If you plan to play around with the `Amount of metrics to submit in each request` configuration variable, ensure you watch the size of the report buffer.

@@ -16,6 +16,7 @@ namespace RustServerMetrics
         const string CONFIGURATION_PATH = "HarmonyMods_Data/ServerMetrics/Configuration.json";
         readonly StringBuilder _stringBuilder = new StringBuilder();
         readonly Dictionary<ulong, Action> _playerStatsActions = new Dictionary<ulong, Action>();
+        readonly Dictionary<ulong, uint> _perfReportDelayCounter = new Dictionary<ulong, uint>();
         readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
         internal readonly HashSet<ulong> _requestedClientPerf = new HashSet<ulong>(1000);
 
@@ -114,7 +115,6 @@ namespace RustServerMetrics
             _stringBuilder.AppendLine("Report Uploader:");
             _stringBuilder.Append("\tRunning: "); _stringBuilder.Append(_reportUploader.IsRunning); _stringBuilder.AppendLine();
             _stringBuilder.Append("\tIn Buffer: "); _stringBuilder.Append(_reportUploader.BufferSize); _stringBuilder.AppendLine();
-
             arg.ReplyWith(_stringBuilder.ToString());
         }
 
@@ -225,6 +225,7 @@ namespace RustServerMetrics
         internal void OnOxidePluginMetrics(Dictionary<string, double> metrics)
         {
             if (!Ready) return;
+            if (metrics.Count < 1) return;
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             foreach (var metric in metrics)
             {
@@ -269,8 +270,17 @@ namespace RustServerMetrics
         {
             if (!player.IsReceivingSnapshot)
             {
-                _requestedClientPerf.Add(player.userID);
-                player.ClientRPCPlayer(null, player, "GetPerformanceReport");
+                _perfReportDelayCounter.TryGetValue(player.userID, out uint perfReportCounter);
+                if (perfReportCounter < 4)
+                {
+                    _perfReportDelayCounter[player.userID] = perfReportCounter + 1;
+                }
+                else
+                {
+                    _perfReportDelayCounter[player.userID] = 0;
+                    _requestedClientPerf.Add(player.userID);
+                    player.ClientRPCPlayer(null, player, "GetPerformanceReport");
+                }
             }
 
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();

@@ -9,7 +9,10 @@ namespace RustServerMetrics
 {
     class ReportUploader : MonoBehaviour
     {
-        const int _sendBufferCapacity = 10000;
+        const int _sendBufferCapacity = 100000;
+
+        readonly Action _notifySubsequentNetworkFailuresAction;
+        readonly Action _notifySubsequentHttpFailuresAction;
 
         readonly List<string> _sendBuffer = new List<string>(_sendBufferCapacity);
         readonly StringBuilder _payloadBuilder = new StringBuilder();
@@ -20,9 +23,29 @@ namespace RustServerMetrics
         Uri _uri = null;
         MetricsLogger _metricsLogger;
 
-        public ushort BatchSize => _metricsLogger.Configuration?.batchSize ?? 300;
+        bool _throttleNetworkErrorMessages = false;
+        uint _accumulatedNetworkErrors = 0;
+
+        bool _throttleHttpErrorMessages = false;
+        uint _accumulatedHttpErrors = 0;
+
+        public ushort BatchSize
+        {
+            get
+            {
+                var configVal = _metricsLogger.Configuration?.batchSize ?? 1000;
+                if (configVal < 1000) return 1000;
+                return configVal;
+            }
+        }
         public bool IsRunning => _isRunning;
         public int BufferSize => _sendBuffer.Count;
+
+        public ReportUploader()
+        {
+            _notifySubsequentNetworkFailuresAction = new Action(NotifySubsequentNetworkFailures);
+            _notifySubsequentHttpFailuresAction = new Action(NotifySubsequentHttpFailures);
+        }
 
         void Awake()
         {
@@ -84,7 +107,16 @@ namespace RustServerMetrics
             {
                 if (_attempt >= 2)
                 {
-                    Debug.LogError($"Error submitting metric: 2 consecutive network failures");
+                    if (_throttleNetworkErrorMessages)
+                    {
+                        _accumulatedNetworkErrors += 1;
+                    }
+                    else
+                    {
+                        Debug.LogError($"Two consecutive network failures occurred while submitting a batch of metrics");
+                        InvokeHandler.Invoke(this, _notifySubsequentNetworkFailuresAction, 5);
+                        _throttleNetworkErrorMessages = true;
+                    }
                     yield break;
                 }
 
@@ -95,10 +127,36 @@ namespace RustServerMetrics
 
             if (request.isHttpError)
             {
-                Debug.LogError($"Error submitting metric: {request.error}");
-                if (_metricsLogger.DebugLogging) Debug.LogError(request.downloadHandler.text);
+                if (_throttleHttpErrorMessages)
+                {
+                    _accumulatedHttpErrors += 1;
+                }
+                else
+                {
+                    Debug.LogError($"A HTTP error occurred while submitting batch of metrics: {request.error}");
+                    if (_metricsLogger.DebugLogging) Debug.LogError(request.downloadHandler.text);
+                    InvokeHandler.Invoke(this, _notifySubsequentHttpFailuresAction, 5);
+                    _throttleHttpErrorMessages = true;
+                }
+
                 yield break;
             }
+        }
+
+        void NotifySubsequentNetworkFailures()
+        {
+            _throttleNetworkErrorMessages = false;
+            if (_accumulatedNetworkErrors == 0) return;
+            Debug.LogError($"{_accumulatedNetworkErrors} subsequent network errors occurred in the last 5 seconds");
+            _accumulatedNetworkErrors = 0;
+        }
+
+        void NotifySubsequentHttpFailures()
+        {
+            _throttleHttpErrorMessages = false;
+            if (_accumulatedHttpErrors == 0) return;
+            Debug.LogError($"{_accumulatedHttpErrors} subsequent HTTP errors occurred in the last 5 seconds");
+            _accumulatedHttpErrors = 0;
         }
 
         void OnDestroy()
