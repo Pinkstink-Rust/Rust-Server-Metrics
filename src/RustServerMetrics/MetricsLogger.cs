@@ -161,7 +161,8 @@ namespace RustServerMetrics
         internal void OnPlayerDisconnected(BasePlayer player)
         {
             if (!Ready) return;
-            player.CancelInvoke(_playerStatsActions[player.userID]);
+            if (_playerStatsActions.TryGetValue(player.userID, out Action action))
+                player.CancelInvoke(action);
             _playerStatsActions.Remove(player.userID);
             _requestedClientPerf.Remove(player.userID);
         }
