@@ -34,7 +34,7 @@ namespace RustServerMetrics
                 if (_baseUri == null)
                 {
                     var uri = new Uri(Configuration.databaseUrl);
-                    _baseUri = new Uri(uri, $"/write?db={Configuration.databaseName}&precision=ms&u={Configuration.databaseUser}&p={Configuration.databasePassword}");
+                    _baseUri = new Uri(uri, $"/api/v2/write?orgID={Configuration.orgId}&bucket={Configuration.bucketId}&precision=ms");
                 }
                 return _baseUri;
             }
@@ -233,9 +233,9 @@ namespace RustServerMetrics
                 _stringBuilder.Clear();
                 _stringBuilder.Append("oxide_plugins,server=");
                 _stringBuilder.Append(Configuration.serverTag);
-                _stringBuilder.Append(",plugin=\"");
-                _stringBuilder.Append(metric.Key);
-                _stringBuilder.Append("\" hookTime=");
+                _stringBuilder.Append(",plugin=");
+                _stringBuilder.Append(metric.Key.Replace(" ", "\\ "));
+                _stringBuilder.Append(" hookTime=");
                 _stringBuilder.Append(metric.Value);
                 _stringBuilder.Append(" ");
                 _stringBuilder.Append(epochNow);
@@ -406,9 +406,21 @@ namespace RustServerMetrics
                 valid = false;
             }
 
-            if (Configuration.databaseName == ConfigData.DEFAULT_INFLUX_DB_NAME)
+            if (Configuration.apiToken == ConfigData.DEFAULT_INFLUX_API_TOKEN)
             {
-                Debug.LogError("[ServerMetrics]: Default database name detected in configuration, loading aborted");
+                Debug.LogError("[ServerMetrics]: Default api token detected in configuration, loading aborted");
+                valid = false;
+            }
+
+            if (Configuration.orgId == ConfigData.DEFAULT_INFLUX_ORG_ID)
+            {
+                Debug.LogError("[ServerMetrics]: Default organization id detected in configuration, loading aborted");
+                valid = false;
+            }
+
+            if (Configuration.bucketId == ConfigData.DEFAULT_INFLUX_BUCKET_ID)
+            {
+                Debug.LogError("[ServerMetrics]: Default bucket id detected in configuration, loading aborted");
                 valid = false;
             }
 
@@ -428,8 +440,6 @@ namespace RustServerMetrics
                 var configStr = File.ReadAllText(CONFIGURATION_PATH);
                 Configuration = JsonConvert.DeserializeObject<ConfigData>(configStr);
                 if (Configuration == null) Configuration = new ConfigData();
-                var uri = new Uri(Configuration.databaseUrl);
-                _baseUri = new Uri(uri, $"/write?db={Configuration.databaseName}&precision=ms&u={Configuration.databaseUser}&p={Configuration.databasePassword}");
             }
             catch
             {

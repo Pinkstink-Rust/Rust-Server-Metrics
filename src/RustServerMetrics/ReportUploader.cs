@@ -10,6 +10,8 @@ namespace RustServerMetrics
     class ReportUploader : MonoBehaviour
     {
         const int _sendBufferCapacity = 100000;
+        const string _authorizationHeaderName = "Authorization";
+        const string _authorizationHeaderValue = "Token {0}";
 
         readonly Action _notifySubsequentNetworkFailuresAction;
         readonly Action _notifySubsequentHttpFailuresAction;
@@ -101,6 +103,7 @@ namespace RustServerMetrics
                 useHttpContinue = true,
                 redirectLimit = 5
             };
+            request.SetRequestHeader(_authorizationHeaderName, string.Format(_authorizationHeaderValue, _metricsLogger.Configuration.apiToken));
             yield return request.SendWebRequest();
 
             if (request.isNetworkError)

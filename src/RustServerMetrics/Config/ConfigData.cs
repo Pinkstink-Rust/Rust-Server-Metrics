@@ -5,9 +5,9 @@ namespace RustServerMetrics.Config
     class ConfigData
     {
         public const string DEFAULT_INFLUX_DB_URL = "http://exampledb.com";
-        public const string DEFAULT_INFLUX_DB_NAME = "CHANGEME_rust_server_example";
-        public const string DEFAULT_INFLUX_DB_USER = "admin";
-        public const string DEFAULT_INFLUX_DB_PASSWORD = "adminadmin";
+        public const string DEFAULT_INFLUX_API_TOKEN = "INSERT_API_TOKEN_HERE";
+        public const string DEFAULT_INFLUX_ORG_ID = "INSERT_ORGANIZATION_ID_HERE";
+        public const string DEFAULT_INFLUX_BUCKET_ID = "INSERT_BUCKET_ID_HERE";
         public const string DEFAULT_SERVER_TAG = "CHANGEME-01";
 
         [JsonProperty(PropertyName = "Enabled")]
@@ -16,14 +16,14 @@ namespace RustServerMetrics.Config
         [JsonProperty(PropertyName = "Influx Database Url")]
         public string databaseUrl = DEFAULT_INFLUX_DB_URL;
 
-        [JsonProperty(PropertyName = "Influx Database Name")]
-        public string databaseName = DEFAULT_INFLUX_DB_NAME;
+        [JsonProperty(PropertyName = "Influx API Token")]
+        public string apiToken = DEFAULT_INFLUX_API_TOKEN;
 
-        [JsonProperty(PropertyName = "Influx Database User")]
-        public string databaseUser = DEFAULT_INFLUX_DB_USER;
+        [JsonProperty(PropertyName = "Influx Organization ID")]
+        public string orgId = DEFAULT_INFLUX_ORG_ID;
 
-        [JsonProperty(PropertyName = "Influx Database Password")]
-        public string databasePassword = DEFAULT_INFLUX_DB_PASSWORD;
+        [JsonProperty(PropertyName = "Influx Bucket ID")]
+        public string bucketId = DEFAULT_INFLUX_BUCKET_ID;
 
         [JsonProperty(PropertyName = "Server Tag")]
         public string serverTag = DEFAULT_SERVER_TAG;
