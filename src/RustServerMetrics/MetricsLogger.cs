@@ -69,7 +69,7 @@ namespace RustServerMetrics
                     return;
                 }
 
-                InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.05f, 0.15f), 0.1f);
+                InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
                 Ready = true;
             }
         }
@@ -143,7 +143,7 @@ namespace RustServerMetrics
             {
                 Ready = true;
                 foreach (var player in BasePlayer.activePlayerList) OnPlayerInit(player);
-                InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.05f, 0.15f), 0.1f);
+                InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
             }
             arg.ReplyWith("[ServerMetrics]: Configuration reloaded");
         }
