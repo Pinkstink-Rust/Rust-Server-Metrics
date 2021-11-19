@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace RustServerMetrics
 {
@@ -11,23 +11,14 @@ namespace RustServerMetrics
     {
         const int _sendBufferCapacity = 100000;
 
-        readonly Action _notifySubsequentNetworkFailuresAction;
-        readonly Action _notifySubsequentHttpFailuresAction;
-
         readonly List<string> _sendBuffer = new List<string>(_sendBufferCapacity);
         readonly StringBuilder _payloadBuilder = new StringBuilder();
 
+        Socket _socket;
+
         bool _isRunning = false;
-        ushort _attempt = 0;
         byte[] _data = null;
-        Uri _uri = null;
         MetricsLogger _metricsLogger;
-
-        bool _throttleNetworkErrorMessages = false;
-        uint _accumulatedNetworkErrors = 0;
-
-        bool _throttleHttpErrorMessages = false;
-        uint _accumulatedHttpErrors = 0;
 
         public ushort BatchSize
         {
@@ -40,12 +31,6 @@ namespace RustServerMetrics
         }
         public bool IsRunning => _isRunning;
         public int BufferSize => _sendBuffer.Count;
-
-        public ReportUploader()
-        {
-            _notifySubsequentNetworkFailuresAction = new Action(NotifySubsequentNetworkFailures);
-            _notifySubsequentHttpFailuresAction = new Action(NotifySubsequentHttpFailures);
-        }
 
         void Awake()
         {
@@ -63,111 +48,79 @@ namespace RustServerMetrics
                 _sendBuffer.RemoveAt(0);
 
             _sendBuffer.Add(payload);
-
-            if (!_isRunning)
-                StartCoroutine(SendBufferLoop());
         }
 
         IEnumerator SendBufferLoop()
         {
+            yield return CoroutineEx.waitForEndOfFrame;
+            while (_isRunning)
+            {
+                if (_socket == null || _socket.Connected != true)
+                {
+                    if (_socket != null)
+                    {
+                        _socket.Close();
+                        _socket.Dispose();
+                        _socket = null;
+                    }
+                    _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+                    {
+                        SendTimeout = 10000
+                    };
+                    Debug.Log("[ServerMetrics] Connecting to QuestDb...");
+                    var connectTask = _socket.ConnectAsync(_metricsLogger.Configuration.questDbHostName, _metricsLogger.Configuration.questDbPort);
+                    yield return new WaitUntil(() => connectTask.IsCompleted);
+                    if (!_socket.Connected)
+                    {
+                        Debug.LogError("[ServerMetrics] Failure connecting to QuestDb");
+                        if (connectTask.IsFaulted) Debug.LogException(connectTask.Exception);
+                        yield return CoroutineEx.waitForSeconds(5);
+                        continue;
+                    }
+                    Debug.Log("[ServerMetrics] Connected to QuestDb");
+                }
+
+                while (_isRunning && _socket.Connected && _sendBuffer.Count > 0)
+                {
+                    int amountToTake = Mathf.Min(_sendBuffer.Count, BatchSize);
+                    for (int i = 0; i < amountToTake; i++)
+                    {
+                        _payloadBuilder.Append(_sendBuffer[i]);
+                        _payloadBuilder.Append("\n");
+                    }
+                    _sendBuffer.RemoveRange(0, amountToTake);
+                    _data = Encoding.UTF8.GetBytes(_payloadBuilder.ToString());
+                    _payloadBuilder.Clear();
+                    var arraySegment = new ArraySegment<byte>(_data);
+                    var sendTask = _socket.SendAsync(arraySegment, SocketFlags.None);
+                    yield return new WaitUntil(() => sendTask.IsCompleted);
+                    if (sendTask.IsFaulted)
+                    {
+                        Debug.LogError("[ServerMetrics] Failure sending metrics to QuestDb");
+                        Debug.LogException(sendTask.Exception);
+                    }
+                    yield return CoroutineEx.waitForEndOfFrame;
+                }
+                yield return CoroutineEx.waitForEndOfFrame;
+            }
+        }
+
+        public void Start_Client()
+        {
             _isRunning = true;
-            yield return null;
+            StartCoroutine(SendBufferLoop());
+        }
 
-            while (_sendBuffer.Count > 0 && _isRunning)
-            {
-                int amountToTake = Mathf.Min(_sendBuffer.Count, BatchSize);
-                for (int i = 0; i < amountToTake; i++)
-                {
-                    _payloadBuilder.Append(_sendBuffer[i]);
-                    _payloadBuilder.Append("\n");
-                }
-                _sendBuffer.RemoveRange(0, amountToTake);
-                _attempt = 0;
-                _data = Encoding.UTF8.GetBytes(_payloadBuilder.ToString());
-                _uri = _metricsLogger.BaseUri;
-                _payloadBuilder.Clear();
-                yield return SendRequest();
-            }
+        public void Stop_Client()
+        {
             _isRunning = false;
-        }
-
-        IEnumerator SendRequest()
-        {
-            var request = new UnityWebRequest(_uri, UnityWebRequest.kHttpVerbPOST)
-            {
-                uploadHandler = new UploadHandlerRaw(_data),
-                downloadHandler = new DownloadHandlerBuffer(),
-                timeout = 5,
-                useHttpContinue = true,
-                redirectLimit = 5
-            };
-            yield return request.SendWebRequest();
-
-            if (request.isNetworkError)
-            {
-                if (_attempt >= 2)
-                {
-                    if (_throttleNetworkErrorMessages)
-                    {
-                        _accumulatedNetworkErrors += 1;
-                    }
-                    else
-                    {
-                        Debug.LogError($"Two consecutive network failures occurred while submitting a batch of metrics");
-                        InvokeHandler.Invoke(this, _notifySubsequentNetworkFailuresAction, 5);
-                        _throttleNetworkErrorMessages = true;
-                    }
-                    yield break;
-                }
-
-                _attempt++;
-                yield return SendRequest();
-                yield break;
-            }
-
-            if (request.isHttpError)
-            {
-                if (_throttleHttpErrorMessages)
-                {
-                    _accumulatedHttpErrors += 1;
-                }
-                else
-                {
-                    Debug.LogError($"A HTTP error occurred while submitting batch of metrics: {request.error}");
-                    if (_metricsLogger.DebugLogging) Debug.LogError(request.downloadHandler.text);
-                    InvokeHandler.Invoke(this, _notifySubsequentHttpFailuresAction, 5);
-                    _throttleHttpErrorMessages = true;
-                }
-
-                yield break;
-            }
-        }
-
-        void NotifySubsequentNetworkFailures()
-        {
-            _throttleNetworkErrorMessages = false;
-            if (_accumulatedNetworkErrors == 0) return;
-            Debug.LogError($"{_accumulatedNetworkErrors} subsequent network errors occurred in the last 5 seconds");
-            _accumulatedNetworkErrors = 0;
-        }
-
-        void NotifySubsequentHttpFailures()
-        {
-            _throttleHttpErrorMessages = false;
-            if (_accumulatedHttpErrors == 0) return;
-            Debug.LogError($"{_accumulatedHttpErrors} subsequent HTTP errors occurred in the last 5 seconds");
-            _accumulatedHttpErrors = 0;
+            StopAllCoroutines();
+            _socket.Close();
         }
 
         void OnDestroy()
         {
-            Stop();
-        }
-
-        public void Stop()
-        {
-            _isRunning = false;
-            StopAllCoroutines();
+            Stop_Client();
         }
     }
 }

@@ -24,21 +24,8 @@ namespace RustServerMetrics
         internal ConfigData Configuration { get; private set; }
         ReportUploader _reportUploader;
         Message.Type _lastMessageType;
-        Uri _baseUri;
 
         public bool DebugLogging => Configuration?.debugLogging == true;
-        public Uri BaseUri
-        {
-            get
-            {
-                if (_baseUri == null)
-                {
-                    var uri = new Uri(Configuration.databaseUrl);
-                    _baseUri = new Uri(uri, $"/write?db={Configuration.databaseName}&precision=ms&u={Configuration.databaseUser}&p={Configuration.databasePassword}");
-                }
-                return _baseUri;
-            }
-        }
 
         internal static void Initialize()
         {
@@ -69,6 +56,7 @@ namespace RustServerMetrics
                     return;
                 }
 
+                _reportUploader.Start_Client();
                 InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.05f, 0.15f), 0.1f);
                 Ready = true;
             }
@@ -131,7 +119,7 @@ namespace RustServerMetrics
                     if (basePlayer == null) continue;
                     basePlayer.CancelInvoke(player.Value);
                 }
-                _reportUploader.Stop();
+                _reportUploader.Stop_Client();
 
                 if (!Configuration.enabled)
                 {
@@ -142,6 +130,7 @@ namespace RustServerMetrics
             else if (!Ready)
             {
                 Ready = true;
+                _reportUploader.Start_Client();
                 foreach (var player in BasePlayer.activePlayerList) OnPlayerInit(player);
                 InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.05f, 0.15f), 0.1f);
             }
@@ -400,15 +389,15 @@ namespace RustServerMetrics
             if (Configuration == null) return false;
 
             bool valid = true;
-            if (Configuration.databaseUrl == ConfigData.DEFAULT_INFLUX_DB_URL)
+            if (Configuration.questDbHostName == ConfigData.DEFAULT_QUESTDB_HOST_NAME)
             {
-                Debug.LogError("[ServerMetrics]: Default database url detected in configuration, loading aborted");
+                Debug.LogError("[ServerMetrics]: Default QuestDB host name detected in configuration, loading aborted");
                 valid = false;
             }
 
-            if (Configuration.databaseName == ConfigData.DEFAULT_INFLUX_DB_NAME)
+            if (Configuration.questDbPort == 0)
             {
-                Debug.LogError("[ServerMetrics]: Default database name detected in configuration, loading aborted");
+                Debug.LogError("[ServerMetrics]: Default QuestDB port in configuration, loading aborted");
                 valid = false;
             }
 
