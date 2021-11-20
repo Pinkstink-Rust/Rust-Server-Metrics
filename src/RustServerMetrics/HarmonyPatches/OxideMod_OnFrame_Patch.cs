@@ -18,7 +18,7 @@ namespace RustServerMetrics.HarmonyPatches
         const string OxidePluginManagerType_FullName = "Oxide.Core.Plugins.PluginManager";
 
         static Assembly _oxideCoreAssembly = null;
-        public static float _tickAccumulator = 0f;
+        public static float nextTick = 0f;
 
         [HarmonyTargetMethods]
         public static IEnumerable<MethodBase> TargetMethods(HarmonyInstance harmonyInstance)
@@ -64,13 +64,15 @@ namespace RustServerMetrics.HarmonyPatches
             var enumeratorLocal = ilGenerator.DeclareLocal(oxidePluginEnumeratorType);
             var dictionaryLocal = ilGenerator.DeclareLocal(typeof(Dictionary<string, double>));
             var pluginLocal = ilGenerator.DeclareLocal(oxidePluginType);
+            var currentTimeLocal = ilGenerator.DeclareLocal(typeof(float));
 
-            var tickAccumulatorFieldInfo = typeof(OxideMod_OnFrame_Patch).GetField(nameof(_tickAccumulator), BindingFlags.Public | BindingFlags.Static);
+            var nextTickFieldInfo = typeof(OxideMod_OnFrame_Patch).GetField(nameof(nextTick), BindingFlags.Public | BindingFlags.Static);
 
             List<CodeInstruction> retList = new List<CodeInstruction>(originalInstructions);
 
             retList[0].labels.Add(skipProcessingLabel);
 
+            var unityGetTimeMethodInfo = typeof(UnityEngine.Time).GetProperty(nameof(UnityEngine.Time.time)).GetGetMethod();
             var oxideGetterMethodInfo = _oxideCoreAssembly.GetType(OxideInterfaceType_FullName, true).GetProperty("Oxide").GetGetMethod();
             var rootPluginManagerGetterMethodInfo = _oxideCoreAssembly.GetType(OxideOxideModType_FullName, true).GetProperty("RootPluginManager").GetGetMethod();
             var getPluginsMethodInfo = _oxideCoreAssembly.GetType(OxidePluginManagerType_FullName, true).GetMethod("GetPlugins");
@@ -89,18 +91,17 @@ namespace RustServerMetrics.HarmonyPatches
                 new CodeInstruction(OpCodes.Ldsfld, hookFieldInfo),
                 new CodeInstruction(OpCodes.Brfalse_S, skipProcessingLabel),
 
-                new CodeInstruction(OpCodes.Ldsfld, tickAccumulatorFieldInfo),
-                new CodeInstruction(OpCodes.Ldarg_1),
-                new CodeInstruction(OpCodes.Add),
-                new CodeInstruction(OpCodes.Stsfld, tickAccumulatorFieldInfo),
-                new CodeInstruction(OpCodes.Ldsfld, tickAccumulatorFieldInfo),
-                new CodeInstruction(OpCodes.Ldc_R4, 1),
-                new CodeInstruction(OpCodes.Blt_Un_S, skipProcessingLabel),
+                new CodeInstruction(OpCodes.Call, unityGetTimeMethodInfo),
+                new CodeInstruction(OpCodes.Stloc, currentTimeLocal.LocalIndex),
 
-                new CodeInstruction(OpCodes.Ldsfld, tickAccumulatorFieldInfo),
-                new CodeInstruction(OpCodes.Ldc_R4, 1),
-                new CodeInstruction(OpCodes.Sub),
-                new CodeInstruction(OpCodes.Stsfld, tickAccumulatorFieldInfo),
+                new CodeInstruction(OpCodes.Ldsfld, nextTickFieldInfo),
+                new CodeInstruction(OpCodes.Ldloc, currentTimeLocal.LocalIndex),
+                new CodeInstruction(OpCodes.Bgt_S, skipProcessingLabel),
+
+                new CodeInstruction(OpCodes.Ldloc, currentTimeLocal.LocalIndex),
+                new CodeInstruction(OpCodes.Ldc_R4, 1f),
+                new CodeInstruction(OpCodes.Add),
+                new CodeInstruction(OpCodes.Stsfld, nextTickFieldInfo),
 
                 new CodeInstruction(OpCodes.Call, oxideGetterMethodInfo),
                 new CodeInstruction(OpCodes.Callvirt, rootPluginManagerGetterMethodInfo),
@@ -109,7 +110,7 @@ namespace RustServerMetrics.HarmonyPatches
                 new CodeInstruction(OpCodes.Stloc, enumeratorLocal.LocalIndex),
 
                 new CodeInstruction(OpCodes.Newobj, typeof(Dictionary<string, double>).GetConstructor(Type.EmptyTypes)),
-                new CodeInstruction(OpCodes.Stloc, dictionaryLocal),
+                new CodeInstruction(OpCodes.Stloc, dictionaryLocal.LocalIndex),
 
                 // Jump to Loop Head
                 new CodeInstruction(OpCodes.Br_S, loopHeadLabel),
