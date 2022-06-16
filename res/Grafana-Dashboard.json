@@ -1,11 +1,12 @@
 {
   "__inputs": [],
+  "__elements": [],
   "__requires": [
     {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "8.2.4"
+      "version": "9.0.0"
     },
     {
       "type": "datasource",
@@ -24,7 +25,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -41,16 +45,18 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "gnetId": null,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1637650677921,
+  "iteration": 1655340357400,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -63,7 +69,9 @@
       "type": "row"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -110,7 +118,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -133,13 +141,14 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
       "targets": [
         {
-          "alias": "$tag_server",
+          "alias": "$tag_server - $col",
           "groupBy": [
             {
               "params": [
@@ -181,7 +190,25 @@
               },
               {
                 "params": [
-                  "Frame Rate"
+                  "Mean"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "instant"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "min"
+              },
+              {
+                "params": [
+                  "Min"
                 ],
                 "type": "alias"
               }
@@ -193,16 +220,19 @@
               "operator": "=~",
               "value": "/$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Frame Rate",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -276,13 +306,14 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
       "targets": [
         {
-          "alias": "$tag_server",
+          "alias": "$tag_server - $col",
           "groupBy": [
             {
               "params": [
@@ -323,7 +354,25 @@
               },
               {
                 "params": [
-                  "Frame Time"
+                  "Mean"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "instant"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "max"
+              },
+              {
+                "params": [
+                  "Max"
                 ],
                 "type": "alias"
               }
@@ -335,16 +384,19 @@
               "operator": "=~",
               "value": "/$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Frame Time",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -394,7 +446,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -418,7 +470,8 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
@@ -513,16 +566,19 @@
               "operator": "=~",
               "value": "/$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Player Count",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -590,7 +646,8 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
@@ -685,16 +742,19 @@
               "operator": "=~",
               "value": "/$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Memory",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -764,7 +824,8 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
@@ -823,16 +884,19 @@
               "operator": "=~",
               "value": "/^$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Entities",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -900,7 +964,8 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
@@ -995,16 +1060,19 @@
               "operator": "=~",
               "value": "/^$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Tasks",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1058,23 +1126,25 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 8,
         "x": 0,
         "y": 17
       },
       "id": 34,
       "interval": "",
-      "maxDataPoints": null,
       "options": {
         "legend": {
           "calcs": [
             "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "sortBy": "Last *",
+          "sortDesc": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
@@ -1139,16 +1209,160 @@
               "operator": "=~",
               "value": "/^$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Plugin Hook Times",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "FPS"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 17
+      },
+      "id": 36,
+      "interval": "5s",
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "min",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "$tag_server",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "$datasource"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "server"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "client_performance",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"fps\") FROM \"client_performance\" WHERE (\"server\" =~ /^$server$/) AND $timeFilter GROUP BY time($__interval), \"server\" fill(none)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "fps"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "server",
+              "operator": "=~",
+              "value": "/^$server$/"
+            }
+          ]
+        }
+      ],
+      "title": "Average Client FPS",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1204,13 +1418,12 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 8,
+        "x": 16,
         "y": 17
       },
       "id": 12,
       "interval": "1000ms",
-      "maxDataPoints": null,
       "options": {
         "legend": {
           "calcs": [
@@ -1222,7 +1435,8 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
@@ -1301,17 +1515,20 @@
               "operator": "=~",
               "value": "/^$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Average Latency",
+      "title": "Average Client Latency",
       "transformations": [],
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1384,7 +1601,8 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
@@ -1473,16 +1691,20 @@
               "operator": "=~",
               "value": "/^$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Network Traffic",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1500,9 +1722,9 @@
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "stepBefore",
+            "lineInterpolation": "stepAfter",
             "lineWidth": 1,
-            "pointSize": 5,
+            "pointSize": 4,
             "scaleDistribution": {
               "type": "linear"
             },
@@ -1523,10 +1745,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
@@ -1546,19 +1764,25 @@
       "options": {
         "legend": {
           "calcs": [
-            "last"
+            "max",
+            "min"
           ],
-          "displayMode": "list",
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "$tag_server - $col",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "$datasource"
+          },
           "groupBy": [
             {
               "params": [
@@ -1616,14 +1840,14 @@
           ]
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Network Updates",
       "transformations": [],
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "uid": "$datasource"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1695,7 +1919,8 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
@@ -1756,17 +1981,21 @@
               "operator": "=~",
               "value": "/^$server$/"
             }
-          ]
+          ],
+          "datasource": {
+            "uid": "$datasource"
+          }
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Packet Loss",
       "type": "timeseries"
     },
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1779,7 +2008,10 @@
       "type": "row"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "$datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1850,16 +2082,23 @@
             "min"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "sortBy": "Last *",
+          "sortDesc": true
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "$tag_server - $tag_steamid",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "$datasource"
+          },
           "groupBy": [
             {
               "params": [
@@ -1889,7 +2128,9 @@
           "measurement": "client_performance",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "SELECT mean(\"fps\") FROM \"client_performance\" WHERE (\"server\" =~ /^$server$/ AND \"steamid\" =~ /^$steamid$/) AND $timeFilter GROUP BY time($__interval), \"steamid\", \"server\" fill(none)",
           "queryType": "randomWalk",
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1911,17 +2152,24 @@
               "key": "server",
               "operator": "=~",
               "value": "/^$server$/"
+            },
+            {
+              "condition": "AND",
+              "key": "steamid",
+              "operator": "=~",
+              "value": "/^$steamIDFilter$/"
             }
           ]
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Player FPS",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "$datasource"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1992,16 +2240,23 @@
             "min"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "sortBy": "Last *",
+          "sortDesc": true
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "$tag_server - $tag_steamid",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "$datasource"
+          },
           "groupBy": [
             {
               "params": [
@@ -2031,7 +2286,9 @@
           "measurement": "client_performance",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "SELECT mean(\"memory\") FROM \"client_performance\" WHERE (\"server\" =~ /^$server$/ AND \"steamid\" =~ /^$steamid$/) AND $timeFilter GROUP BY time($__interval), \"server\", \"steamid\" fill(none)",
           "queryType": "randomWalk",
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2053,17 +2310,24 @@
               "key": "server",
               "operator": "=~",
               "value": "/^$server$/"
+            },
+            {
+              "condition": "AND",
+              "key": "steamid",
+              "operator": "=~",
+              "value": "/^$steamIDFilter$/"
             }
           ]
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Player Memory",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "$datasource"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -2135,16 +2399,23 @@
             "min"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "sortBy": "Last *",
+          "sortDesc": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "$tag_server - $tag_steamid - $tag_ip",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "$datasource"
+          },
           "groupBy": [
             {
               "params": [
@@ -2180,9 +2451,9 @@
           "measurement": "connection_latency",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"ping\") AS \"Latency\" FROM \"connection_latency\" WHERE $timeFilter GROUP BY time($interval), \"ip\", \"steamid\" fill(none)",
+          "query": "SELECT mean(\"ping\") AS \"Latency\" FROM \"connection_latency\" WHERE (\"server\" =~ /^$server$/ AND \"steamid\" =~ /^$steamid$/) AND $timeFilter GROUP BY time($interval), \"ip\", \"steamid\", \"server\" fill(none)",
           "queryType": "randomWalk",
-          "rawQuery": false,
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2210,17 +2481,24 @@
               "key": "server",
               "operator": "=~",
               "value": "/^$server$/"
+            },
+            {
+              "condition": "AND",
+              "key": "steamid",
+              "operator": "=~",
+              "value": "/^$steamIDFilter$/"
             }
           ]
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Player Latency",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "$datasource"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -2291,16 +2569,23 @@
             "sum"
           ],
           "displayMode": "table",
-          "placement": "bottom"
+          "placement": "bottom",
+          "sortBy": "Last *",
+          "sortDesc": true
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "single",
+          "sort": "none"
         }
       },
       "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "$tag_server - $tag_steamid - $tag_ip",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "$datasource"
+          },
           "groupBy": [
             {
               "params": [
@@ -2336,9 +2621,9 @@
           "measurement": "connection_latency",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"packet_loss\") AS \"Latency\" FROM \"connection_latency\" WHERE $timeFilter GROUP BY time($interval), \"ip\", \"steamid\" fill(none)",
+          "query": "SELECT sum(\"packet_loss\") AS \"Packet Loss\" FROM \"connection_latency\" WHERE (\"server\" =~ /^$server$/ AND \"steamid\" =~ /^$steamid$/) AND $timeFilter GROUP BY time($interval), \"ip\", \"steamid\", \"server\" fill(none)",
           "queryType": "randomWalk",
-          "rawQuery": false,
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2366,50 +2651,46 @@
               "key": "server",
               "operator": "=~",
               "value": "/^$server$/"
+            },
+            {
+              "condition": "AND",
+              "key": "steamid",
+              "operator": "=~",
+              "value": "/^$steamIDFilter$/"
             }
           ]
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Player Packet Loss",
       "type": "timeseries"
     }
   ],
   "refresh": "15s",
-  "schemaVersion": 32,
+  "schemaVersion": 36,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": false,
-          "text": "Vital-Rust-Metrics-v1",
-          "value": "Vital-Rust-Metrics-v1"
-        },
-        "description": null,
-        "error": null,
+        "current": {},
         "hide": 0,
         "includeAll": false,
-        "label": null,
         "multi": false,
         "name": "datasource",
         "options": [],
         "query": "influxdb",
         "queryValue": "",
         "refresh": 1,
-        "regex": "",
+        "regex": ".*",
         "skipUrlSync": false,
         "type": "datasource"
       },
       {
-        "allValue": null,
         "current": {},
-        "datasource": "$datasource",
+        "datasource": {
+          "uid": "$datasource"
+        },
         "definition": "",
-        "description": null,
-        "error": null,
         "hide": 0,
         "includeAll": false,
         "label": "Rust Server",
@@ -2425,6 +2706,26 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ".*",
+          "value": ".*"
+        },
+        "hide": 0,
+        "label": "SteamID Filter",
+        "name": "steamid",
+        "options": [
+          {
+            "selected": true,
+            "text": ".*",
+            "value": ".*"
+          }
+        ],
+        "query": ".*",
+        "skipUrlSync": false,
+        "type": "textbox"
       }
     ]
   },
@@ -2453,5 +2754,6 @@
   "timezone": "browser",
   "title": "Rust Server Metrics",
   "uid": "nvZajLJGk",
-  "version": 146
+  "version": 178,
+  "weekStart": ""
 }

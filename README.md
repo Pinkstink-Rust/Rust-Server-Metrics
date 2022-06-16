@@ -4,7 +4,7 @@ A metrics gathering HarmonyMod for [Rust](https://playrust.com) game servers.
 ![grafana-preview](.github/readme-image.png)
 
 # Basic Setup Guide
-1. Install Grafana v8+ and InfluxDb v1.8 (v2.0+ is not compatible) on a server
+1. Install Grafana v9+ and InfluxDb v1.8 (v2.0+ is not compatible) on a server
 2. Set the InfluxDb config variable `max-series-per-database` to 0, this is required due to the volume of data that is stored for player based metrics
 > **NOTE**: Failure to do this will eventually result in metrics submission failures and the loss of data
 3. Restart InfluxDb to apply the config change
