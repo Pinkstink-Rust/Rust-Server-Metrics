@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30413.136
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RustServerMetrics", "src\RustServerMetrics\RustServerMetrics.csproj", "{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RustServerMetrics", "src\RustServerMetrics\RustServerMetrics.csproj", "{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AF492EDF-ECD2-4060-A92F-F5E9FFC3F7E2}"
 	ProjectSection(SolutionItems) = preProject
@@ -12,14 +12,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		Linux|Any CPU = Linux|Any CPU
+		Windows|Any CPU = Windows|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Linux|Any CPU.ActiveCfg = Linux|Any CPU
+		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Linux|Any CPU.Build.0 = Linux|Any CPU
+		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Windows|Any CPU.ActiveCfg = Windows|Any CPU
+		{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}.Windows|Any CPU.Build.0 = Windows|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

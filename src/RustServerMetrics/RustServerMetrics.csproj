@@ -1,373 +1,153 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <OutputType>Library</OutputType>
     <RootNamespace>RustServerMetrics</RootNamespace>
     <AssemblyName>RustServerMetrics</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
     <ProjectGuid>{3C3A47A5-709A-42BB-B2BF-DB1FA0FEE316}</ProjectGuid>
-    <TargetFrameworkProfile />
+
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+
+    <Configurations>Linux;Windows</Configurations>
+
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Configuration Condition=" '$(Configuration)' == '' ">Linux</Configuration>
+
+    <GamePlatform Condition=" '$(Configuration)' == 'Windows' ">windows</GamePlatform>
+    <GamePlatform Condition=" '$(GamePlatform)' == '' ">linux</GamePlatform>
+
+    <AssemblySearchPaths>..\..\deps\$(GamePlatform);$(AssemblySearchPaths)</AssemblySearchPaths>
+
+    <LangVersion>10</LangVersion>
+
+    <Nullable>disable</Nullable>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+  
+  <PropertyGroup Condition="'$(Configuration)' == 'Linux'">
+    <OutputPath>bin\Linux\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>embedded</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Windows'">
+    <OutputPath>bin\Windows\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>embedded</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+
   <!-- make all references non-private, so they won't be copied to the output folder -->
   <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
     </ItemGroup>
   </Target>
+
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\..\deps\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="Accessibility">
-      <HintPath>..\..\deps\Accessibility.dll</HintPath>
-    </Reference>
-    <Reference Include="ApexAI">
-      <HintPath>..\..\deps\ApexAI.dll</HintPath>
-    </Reference>
-    <Reference Include="ApexSerialization">
-      <HintPath>..\..\deps\ApexSerialization.dll</HintPath>
-    </Reference>
-    <Reference Include="ApexShared">
-      <HintPath>..\..\deps\ApexShared.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\deps\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\deps\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="com.unity.postprocessing.Runtime">
-      <HintPath>..\..\deps\com.unity.postprocessing.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="CurvedTextMeshPro">
-      <HintPath>..\..\deps\CurvedTextMeshPro.dll</HintPath>
-    </Reference>
-    <Reference Include="EasyAntiCheat.Client">
-      <HintPath>..\..\deps\EasyAntiCheat.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="EasyAntiCheat.Server">
-      <HintPath>..\..\deps\EasyAntiCheat.Server.dll</HintPath>
-    </Reference>
-    <Reference Include="EZhex1991.EZSoftBone">
-      <HintPath>..\..\deps\EZhex1991.EZSoftBone.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Console">
-      <HintPath>..\..\deps\Facepunch.Console.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.GoogleSheets">
-      <HintPath>..\..\deps\Facepunch.GoogleSheets.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Input">
-      <HintPath>..\..\deps\Facepunch.Input.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Network">
-      <HintPath>..\..\deps\Facepunch.Network.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Raknet">
-      <HintPath>..\..\deps\Facepunch.Raknet.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Rcon">
-      <HintPath>..\..\deps\Facepunch.Rcon.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Skeleton">
-      <HintPath>..\..\deps\Facepunch.Skeleton.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Sqlite">
-      <HintPath>..\..\deps\Facepunch.Sqlite.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.SteamNetworking">
-      <HintPath>..\..\deps\Facepunch.SteamNetworking.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.System">
-      <HintPath>..\..\deps\Facepunch.System.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.Unity">
-      <HintPath>..\..\deps\Facepunch.Unity.dll</HintPath>
-    </Reference>
-    <Reference Include="Facepunch.UnityEngine">
-      <HintPath>..\..\deps\Facepunch.UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="NewAssembly">
-      <HintPath>..\..\deps\NewAssembly.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\deps\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Data">
-      <HintPath>..\..\deps\Rust.Data.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Demo">
-      <HintPath>..\..\deps\Rust.Demo.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Global">
-      <HintPath>..\..\deps\Rust.Global.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Localization">
-      <HintPath>..\..\deps\Rust.Localization.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Platform">
-      <HintPath>..\..\deps\Rust.Platform.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Platform.Common">
-      <HintPath>..\..\deps\Rust.Platform.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Platform.Steam">
-      <HintPath>..\..\deps\Rust.Platform.Steam.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.UI">
-      <HintPath>..\..\deps\Rust.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.Workshop">
-      <HintPath>..\..\deps\Rust.Workshop.dll</HintPath>
-    </Reference>
-    <Reference Include="Rust.World">
-      <HintPath>..\..\deps\Rust.World.dll</HintPath>
-    </Reference>
-    <Reference Include="System">
-      <HintPath>..\..\deps\System</HintPath>
-    </Reference>
-    <Reference Include="System.Core">
-      <HintPath>..\..\deps\System.Core</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <HintPath>..\..\deps\System.Xml.Linq</HintPath>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <HintPath>..\..\deps\System.Data.DataSetExtensions</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CSharp">
-      <HintPath>..\..\deps\Microsoft.CSharp</HintPath>
-    </Reference>
-    <Reference Include="System.Data">
-      <HintPath>..\..\deps\System.Data</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Http">
-      <HintPath>..\..\deps\System.Net.Http</HintPath>
-    </Reference>
-    <Reference Include="System.Xml">
-      <HintPath>..\..\deps\System.Xml</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>..\..\deps\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AccessibilityModule">
-      <HintPath>..\..\deps\UnityEngine.AccessibilityModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AIModule">
-      <HintPath>..\..\deps\UnityEngine.AIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AndroidJNIModule">
-      <HintPath>..\..\deps\UnityEngine.AndroidJNIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>..\..\deps\UnityEngine.AnimationModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>..\..\deps\UnityEngine.AssetBundleModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AudioModule">
-      <HintPath>..\..\deps\UnityEngine.AudioModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ClothModule">
-      <HintPath>..\..\deps\UnityEngine.ClothModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ClusterInputModule">
-      <HintPath>..\..\deps\UnityEngine.ClusterInputModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ClusterRendererModule">
-      <HintPath>..\..\deps\UnityEngine.ClusterRendererModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\deps\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CrashReportingModule">
-      <HintPath>..\..\deps\UnityEngine.CrashReportingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.DirectorModule">
-      <HintPath>..\..\deps\UnityEngine.DirectorModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.DSPGraphModule">
-      <HintPath>..\..\deps\UnityEngine.DSPGraphModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.GameCenterModule">
-      <HintPath>..\..\deps\UnityEngine.GameCenterModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.GridModule">
-      <HintPath>..\..\deps\UnityEngine.GridModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.HotReloadModule">
-      <HintPath>..\..\deps\UnityEngine.HotReloadModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>..\..\deps\UnityEngine.ImageConversionModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>..\..\deps\UnityEngine.IMGUIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>..\..\deps\UnityEngine.InputLegacyModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.InputModule">
-      <HintPath>..\..\deps\UnityEngine.InputModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>..\..\deps\UnityEngine.JSONSerializeModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.LocalizationModule">
-      <HintPath>..\..\deps\UnityEngine.LocalizationModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ParticleSystemModule">
-      <HintPath>..\..\deps\UnityEngine.ParticleSystemModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.PerformanceReportingModule">
-      <HintPath>..\..\deps\UnityEngine.PerformanceReportingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.Physics2DModule">
-      <HintPath>..\..\deps\UnityEngine.Physics2DModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\deps\UnityEngine.PhysicsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ProfilerModule">
-      <HintPath>..\..\deps\UnityEngine.ProfilerModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ScreenCaptureModule">
-      <HintPath>..\..\deps\UnityEngine.ScreenCaptureModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.SharedInternalsModule">
-      <HintPath>..\..\deps\UnityEngine.SharedInternalsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.SpriteMaskModule">
-      <HintPath>..\..\deps\UnityEngine.SpriteMaskModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.SpriteShapeModule">
-      <HintPath>..\..\deps\UnityEngine.SpriteShapeModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.StreamingModule">
-      <HintPath>..\..\deps\UnityEngine.StreamingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.SubstanceModule">
-      <HintPath>..\..\deps\UnityEngine.SubstanceModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.SubsystemsModule">
-      <HintPath>..\..\deps\UnityEngine.SubsystemsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TerrainModule">
-      <HintPath>..\..\deps\UnityEngine.TerrainModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TerrainPhysicsModule">
-      <HintPath>..\..\deps\UnityEngine.TerrainPhysicsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextCoreModule">
-      <HintPath>..\..\deps\UnityEngine.TextCoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>..\..\deps\UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TilemapModule">
-      <HintPath>..\..\deps\UnityEngine.TilemapModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TLSModule">
-      <HintPath>..\..\deps\UnityEngine.TLSModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\deps\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>..\..\deps\UnityEngine.UIElementsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>..\..\deps\UnityEngine.UIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UmbraModule">
-      <HintPath>..\..\deps\UnityEngine.UmbraModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UNETModule">
-      <HintPath>..\..\deps\UnityEngine.UNETModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityAnalyticsModule">
-      <HintPath>..\..\deps\UnityEngine.UnityAnalyticsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityConnectModule">
-      <HintPath>..\..\deps\UnityEngine.UnityConnectModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityTestProtocolModule">
-      <HintPath>..\..\deps\UnityEngine.UnityTestProtocolModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
-      <HintPath>..\..\deps\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestAudioModule">
-      <HintPath>..\..\deps\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestModule">
-      <HintPath>..\..\deps\UnityEngine.UnityWebRequestModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestTextureModule">
-      <HintPath>..\..\deps\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
-      <HintPath>..\..\deps\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.VehiclesModule">
-      <HintPath>..\..\deps\UnityEngine.VehiclesModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.VFXModule">
-      <HintPath>..\..\deps\UnityEngine.VFXModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.VideoModule">
-      <HintPath>..\..\deps\UnityEngine.VideoModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.VRModule">
-      <HintPath>..\..\deps\UnityEngine.VRModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.WindModule">
-      <HintPath>..\..\deps\UnityEngine.WindModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.XRModule">
-      <HintPath>..\..\deps\UnityEngine.XRModule.dll</HintPath>
-    </Reference>
+    <Reference Include="0Harmony" />
+    <Reference Include="Accessibility" />
+    <Reference Include="Assembly-CSharp" />
+    <Reference Include="Assembly-CSharp-firstpass" />
+    <Reference Include="CurvedTextMeshPro" />
+    <Reference Include="EasyAntiCheat.Client" />
+    <Reference Include="EasyAntiCheat.Server" />
+    <Reference Include="EZhex1991.EZSoftBone" />
+    <Reference Include="Facepunch.Console" />
+    <Reference Include="Facepunch.GoogleSheets" />
+    <Reference Include="Facepunch.Input" />
+    <Reference Include="Facepunch.Network" />
+    <Reference Include="Facepunch.Raknet" />
+    <Reference Include="Facepunch.Rcon" />
+    <Reference Include="Facepunch.Skeleton" />
+    <Reference Include="Facepunch.Sqlite" />
+    <Reference Include="Facepunch.SteamNetworking" />
+    <Reference Include="Facepunch.System" />
+    <Reference Include="Facepunch.Unity" />
+    <Reference Include="Facepunch.UnityEngine" />
+    <Reference Include="Newtonsoft.Json" />
+    <Reference Include="Rust.Data" />
+    <Reference Include="Rust.Demo" />
+    <Reference Include="Rust.Global" />
+    <Reference Include="Rust.Localization" />
+    <Reference Include="Rust.Platform" />
+    <Reference Include="Rust.Platform.Common" />
+    <Reference Include="Rust.Platform.Steam" />
+    <Reference Include="Rust.UI" />
+    <Reference Include="Rust.Workshop" />
+    <Reference Include="Rust.World" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine" />
+    <Reference Include="UnityEngine.AccessibilityModule" />
+    <Reference Include="UnityEngine.AIModule" />
+    <Reference Include="UnityEngine.AndroidJNIModule" />
+    <Reference Include="UnityEngine.AnimationModule" />
+    <Reference Include="UnityEngine.AssetBundleModule" />
+    <Reference Include="UnityEngine.AudioModule" />
+    <Reference Include="UnityEngine.ClothModule" />
+    <Reference Include="UnityEngine.ClusterInputModule" />
+    <Reference Include="UnityEngine.ClusterRendererModule" />
+    <Reference Include="UnityEngine.CoreModule" />
+    <Reference Include="UnityEngine.CrashReportingModule" />
+    <Reference Include="UnityEngine.DirectorModule" />
+    <Reference Include="UnityEngine.DSPGraphModule" />
+    <Reference Include="UnityEngine.GameCenterModule" />
+    <Reference Include="UnityEngine.GridModule" />
+    <Reference Include="UnityEngine.HotReloadModule" />
+    <Reference Include="UnityEngine.ImageConversionModule" />
+    <Reference Include="UnityEngine.IMGUIModule" />
+    <Reference Include="UnityEngine.InputLegacyModule" />
+    <Reference Include="UnityEngine.InputModule" />
+    <Reference Include="UnityEngine.JSONSerializeModule" />
+    <Reference Include="UnityEngine.LocalizationModule" />
+    <Reference Include="UnityEngine.ParticleSystemModule" />
+    <Reference Include="UnityEngine.PerformanceReportingModule" />
+    <Reference Include="UnityEngine.Physics2DModule" />
+    <Reference Include="UnityEngine.PhysicsModule" />
+    <Reference Include="UnityEngine.ProfilerModule" />
+    <Reference Include="UnityEngine.ScreenCaptureModule" />
+    <Reference Include="UnityEngine.SharedInternalsModule" />
+    <Reference Include="UnityEngine.SpriteMaskModule" />
+    <Reference Include="UnityEngine.SpriteShapeModule" />
+    <Reference Include="UnityEngine.StreamingModule" />
+    <Reference Include="UnityEngine.SubstanceModule" />
+    <Reference Include="UnityEngine.SubsystemsModule" />
+    <Reference Include="UnityEngine.TerrainModule" />
+    <Reference Include="UnityEngine.TerrainPhysicsModule" />
+    <Reference Include="UnityEngine.TextCoreModule" />
+    <Reference Include="UnityEngine.TextRenderingModule" />
+    <Reference Include="UnityEngine.TilemapModule" />
+    <Reference Include="UnityEngine.TLSModule" />
+    <Reference Include="UnityEngine.UI" />
+    <Reference Include="UnityEngine.UIElementsModule" />
+    <Reference Include="UnityEngine.UIModule" />
+    <Reference Include="UnityEngine.UmbraModule" />
+    <Reference Include="UnityEngine.UNETModule" />
+    <Reference Include="UnityEngine.UnityAnalyticsModule" />
+    <Reference Include="UnityEngine.UnityConnectModule" />
+    <Reference Include="UnityEngine.UnityTestProtocolModule" />
+    <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule" />
+    <Reference Include="UnityEngine.UnityWebRequestAudioModule" />
+    <Reference Include="UnityEngine.UnityWebRequestModule" />
+    <Reference Include="UnityEngine.UnityWebRequestTextureModule" />
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule" />
+    <Reference Include="UnityEngine.VehiclesModule" />
+    <Reference Include="UnityEngine.VFXModule" />
+    <Reference Include="UnityEngine.VideoModule" />
+    <Reference Include="UnityEngine.VRModule" />
+    <Reference Include="UnityEngine.WindModule" />
+    <Reference Include="UnityEngine.XRModule" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Config\ConfigData.cs" />
-    <Compile Include="HarmonyPatches\BasePlayer_OnDisconnected_Patch.cs" />
-    <Compile Include="HarmonyPatches\BasePlayer_PerformanceReport_Patch.cs" />
-    <Compile Include="HarmonyPatches\BasePlayer_PlayerInit_Patch.cs" />
-    <Compile Include="HarmonyPatches\Bootstrap_StartServer_Patch.cs" />
-    <Compile Include="HarmonyPatches\NetWrite_Send_Patch.cs" />
-    <Compile Include="HarmonyPatches\NetWrite_PacketID_Patch.cs" />
-    <Compile Include="HarmonyPatches\OxideMod_OnFrame_Patch.cs" />
-    <Compile Include="HarmonyPatches\Performance_FPSTimer_Patch.cs" />
-    <Compile Include="HarmonyPatches\TimeWarning_Dispose_Patch.cs" />
-    <Compile Include="HarmonyPatches\TimeWarning_New_Patch.cs" />
-    <Compile Include="MetricsLogger.cs" />
-    <Compile Include="MetricsTimeWarning.cs" />
-    <Compile Include="ReportUploader.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

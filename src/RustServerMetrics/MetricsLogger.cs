@@ -18,12 +18,14 @@ namespace RustServerMetrics
         readonly Dictionary<ulong, Action> _playerStatsActions = new Dictionary<ulong, Action>();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new Dictionary<ulong, uint>();
         readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
-        internal readonly HashSet<ulong> _requestedClientPerf = new HashSet<ulong>(1000);
+        internal readonly HashSet<string> _requestedClientPerf = new HashSet<string>(1000);
+        readonly int _performanceReport_RequestId = UnityEngine.Random.Range(-2147483648, 2147483647);
 
         public bool Ready { get; private set; }
         internal ConfigData Configuration { get; private set; }
         ReportUploader _reportUploader;
         Message.Type _lastMessageType;
+        bool _firstReportGenerated = false;
         Uri _baseUri;
 
         public bool DebugLogging => Configuration?.debugLogging == true;
@@ -47,7 +49,7 @@ namespace RustServerMetrics
             Pool.FillBuffer<MetricsTimeWarning>(100);
         }
 
-        override protected void Awake()
+        public override void Awake()
         {
             base.Awake();
             var messageTypes = Enum.GetValues(typeof(Message.Type));
@@ -164,7 +166,7 @@ namespace RustServerMetrics
             if (_playerStatsActions.TryGetValue(player.userID, out Action action))
                 player.CancelInvoke(action);
             _playerStatsActions.Remove(player.userID);
-            _requestedClientPerf.Remove(player.userID);
+            _requestedClientPerf.Remove(player.UserIDString);
         }
 
         internal void OnNetWritePacketID(Message.Type messageType)
@@ -243,28 +245,24 @@ namespace RustServerMetrics
             }
         }
 
-        internal void OnClientPerformanceReport(BasePlayer player, int memory, int garbage, float fps, int uptime, bool streamerMode)
+        internal bool OnClientPerformanceReport(ClientPerformanceReport clientPerformanceReport)
         {
+            if (clientPerformanceReport.request_id != _performanceReport_RequestId) return false;
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
             _stringBuilder.Clear();
             _stringBuilder.Append("client_performance,server=");
             _stringBuilder.Append(Configuration.serverTag);
             _stringBuilder.Append(",steamid=");
-            _stringBuilder.Append(player.UserIDString);
+            _stringBuilder.Append(clientPerformanceReport.user_id);
             _stringBuilder.Append(" memory=");
-            _stringBuilder.Append(memory);
-            _stringBuilder.Append("i,garbage=");
-            _stringBuilder.Append(garbage);
+            _stringBuilder.Append(clientPerformanceReport.memory_system);
             _stringBuilder.Append("i,fps=");
-            _stringBuilder.Append(fps);
-            _stringBuilder.Append(",uptime=");
-            _stringBuilder.Append(uptime);
-            _stringBuilder.Append("i,streamerMode=");
-            _stringBuilder.Append(streamerMode);
+            _stringBuilder.Append(clientPerformanceReport.fps);
             _stringBuilder.Append(" ");
             _stringBuilder.Append(epochNow);
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            _requestedClientPerf.Remove(player.userID);
+            _requestedClientPerf.Remove(clientPerformanceReport.user_id);
+            return true;
         }
 
         void GatherPlayerSecondStats(BasePlayer player)
@@ -279,8 +277,8 @@ namespace RustServerMetrics
                 else
                 {
                     _perfReportDelayCounter[player.userID] = 0;
-                    _requestedClientPerf.Add(player.userID);
-                    player.ClientRPCPlayer(null, player, "GetPerformanceReport");
+                    _requestedClientPerf.Add(player.UserIDString);
+                    player.ClientRPCPlayer(null, player, "GetPerformanceReport", "legacy", _performanceReport_RequestId);
                 }
             }
 
@@ -308,6 +306,11 @@ namespace RustServerMetrics
         internal void OnPerformanceReportGenerated()
         {
             if (!Ready) return;
+            if (!_firstReportGenerated)
+            {
+                _firstReportGenerated = true;
+                return;
+            }
             var current = Performance.current;
             var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
 

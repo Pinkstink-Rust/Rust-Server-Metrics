@@ -259,6 +259,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-/RaidSimulator/Config Backup
-/RaidSimulator/Data Backup
-/RaidSimulator/OxideBackup/ZoneManager.json
+deps
+raw-deps
+tools

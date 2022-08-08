@@ -15,6 +15,10 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
+- task: BatchScript@1
+  inputs:
+    filename: 'update-all-dependencies.bat'
+
 - task: NuGetToolInstaller@1
 
 - task: NuGetCommand@2

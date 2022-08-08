@@ -1,0 +1,3 @@
+pwsh scripts\SteamDownloader.ps1 -steam_appid 258550 -steam_branch staging -platform windows -deps_dir "../raw-deps"
+pwsh scripts\unprivate-dependencies.ps1 -outputPath "deps/windows/" -inputPath "raw-deps/linux/RustDedicated_Data/Managed"
+PAUSE
