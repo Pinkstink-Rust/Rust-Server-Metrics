@@ -13,7 +13,7 @@ pool:
 variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  buildConfiguration: 'Linux'
 
 steps:
 - task: BatchScript@1
@@ -29,7 +29,7 @@ steps:
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
-    msbuildArgs: '/p:Configuration=Linux /p:OutDir=$(Build.SourcesDirectory)/build'
+    msbuildArgs: '/p:OutDir=$(Build.SourcesDirectory)/build'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
