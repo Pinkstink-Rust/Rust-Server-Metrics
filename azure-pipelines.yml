@@ -29,7 +29,7 @@ steps:
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
-    msbuildArgs: '/p:OutDir=$(Build.SourcesDirectory)/build'
+    msbuildArgs: '/p:Configuration=Linux /p:OutDir=$(Build.SourcesDirectory)/build'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
