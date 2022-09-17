@@ -18,6 +18,7 @@ namespace RustServerMetrics
         readonly Dictionary<ulong, Action> _playerStatsActions = new Dictionary<ulong, Action>();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new Dictionary<ulong, uint>();
         readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
+        readonly Dictionary<Type, double> _serverInvokes = new Dictionary<Type, double>();
         internal readonly HashSet<string> _requestedClientPerf = new HashSet<string>(1000);
         readonly int _performanceReport_RequestId = UnityEngine.Random.Range(-2147483648, 2147483647);
 
@@ -72,6 +73,7 @@ namespace RustServerMetrics
                 }
 
                 InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
+                InvokeRepeating(LogServerInvokes, UnityEngine.Random.Range(0f, 1f), 1f);
                 Ready = true;
             }
         }
@@ -127,6 +129,7 @@ namespace RustServerMetrics
             {
                 Ready = false;
                 CancelInvoke(LogNetworkUpdates);
+                CancelInvoke(LogServerInvokes);
                 foreach (var player in _playerStatsActions)
                 {
                     var basePlayer = BasePlayer.FindByID(player.Key);
@@ -146,6 +149,7 @@ namespace RustServerMetrics
                 Ready = true;
                 foreach (var player in BasePlayer.activePlayerList) OnPlayerInit(player);
                 InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
+                InvokeRepeating(LogServerInvokes, UnityEngine.Random.Range(0f, 1f), 1f);
             }
             arg.ReplyWith("[ServerMetrics]: Configuration reloaded");
         }
@@ -225,22 +229,35 @@ namespace RustServerMetrics
             }
         }
 
-        internal void OnServerInvoke(InvokeAction invokeAction, long milliseconds, bool failed)
+        internal void OnServerInvoke(InvokeAction invokeAction, double milliseconds, bool failed)
         {
             if (!Ready) return;
-            var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-            _stringBuilder.Clear();
-            _stringBuilder.Append("invoke_execution,server=");
-            _stringBuilder.Append(Configuration.serverTag);
-            _stringBuilder.Append(",behaviour=\"");
-            _stringBuilder.Append(invokeAction.sender.GetType().Name);
-            _stringBuilder.Append("\" duration=");
-            _stringBuilder.Append(milliseconds);
-            _stringBuilder.Append("i,failed=");
-            _stringBuilder.Append(failed);
-            _stringBuilder.Append(" ");
-            _stringBuilder.Append(epochNow);
-            _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
+            var type = invokeAction.sender.GetType();
+            if (!_serverInvokes.TryGetValue(type, out double currentDuration))
+            {
+                _serverInvokes.Add(type, milliseconds);
+                return;
+            }
+            _serverInvokes[type] = currentDuration + milliseconds;
+        }
+
+        internal void LogServerInvokes()
+        {
+            foreach (var item in _serverInvokes)
+            {
+                var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+                _stringBuilder.Clear();
+                _stringBuilder.Append("invoke_execution,server=");
+                _stringBuilder.Append(Configuration.serverTag);
+                _stringBuilder.Append(",behaviour=\"");
+                _stringBuilder.Append(item.Key.Name);
+                _stringBuilder.Append("\" duration=");
+                _stringBuilder.Append((float)item.Value);
+                _stringBuilder.Append(" ");
+                _stringBuilder.Append(epochNow);
+                _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
+            }
+            _serverInvokes.Clear();
         }
 
         internal void OnOxidePluginMetrics(Dictionary<string, double> metrics)

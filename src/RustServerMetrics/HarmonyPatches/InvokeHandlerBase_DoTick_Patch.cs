@@ -58,7 +58,7 @@ namespace RustServerMetrics.HarmonyPatches
             finally
             {
                 _stopwatch.Stop();
-                MetricsLogger.Instance?.OnServerInvoke(invokeAction, _stopwatch.ElapsedMilliseconds, _failedExecution);
+                MetricsLogger.Instance?.OnServerInvoke(invokeAction, _stopwatch.Elapsed.TotalMilliseconds, _failedExecution);
             }
         }
 
