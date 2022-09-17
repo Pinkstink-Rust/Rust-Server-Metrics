@@ -31,7 +31,7 @@ namespace RustServerMetrics.HarmonyPatches
             var instructionsList = new List<CodeInstruction>(originalInstructions);
             var idx = GetSequenceStartIndex(instructionsList, _sequenceToFind);
 
-            if (idx < 0) throw new Exception("Failed to find injection index");
+            if (idx < 0) throw new Exception($"Failed to find injection index for {nameof(InvokeHandlerBase_DoTick_Patch)}");
 
             instructionsList.RemoveRange(idx + 1, _sequenceToFind.Length - 1);
             instructionsList.InsertRange(idx + 1, new CodeInstruction[]
