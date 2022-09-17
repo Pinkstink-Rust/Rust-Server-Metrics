@@ -225,6 +225,24 @@ namespace RustServerMetrics
             }
         }
 
+        internal void OnServerInvoke(InvokeAction invokeAction, long milliseconds, bool failed)
+        {
+            if (!Ready) return;
+            var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+            _stringBuilder.Clear();
+            _stringBuilder.Append("invoke_execution,server=");
+            _stringBuilder.Append(Configuration.serverTag);
+            _stringBuilder.Append(",behaviour=\"");
+            _stringBuilder.Append(invokeAction.sender.GetType().Name);
+            _stringBuilder.Append("\" duration=");
+            _stringBuilder.Append(milliseconds);
+            _stringBuilder.Append("i,failed=");
+            _stringBuilder.Append(failed);
+            _stringBuilder.Append(" ");
+            _stringBuilder.Append(epochNow);
+            _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
+        }
+
         internal void OnOxidePluginMetrics(Dictionary<string, double> metrics)
         {
             if (!Ready) return;
