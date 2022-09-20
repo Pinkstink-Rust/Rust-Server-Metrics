@@ -252,7 +252,7 @@ namespace RustServerMetrics
                 _stringBuilder.Append(Configuration.serverTag);
                 _stringBuilder.Append(",behaviour=\"");
                 _stringBuilder.Append(item.Key.DeclaringType?.Name);
-                _stringBuilder.Append(".");
+                _stringBuilder.Append("\",method=\"");
                 _stringBuilder.Append(item.Key.Name);
                 _stringBuilder.Append("\" duration=");
                 _stringBuilder.Append((float)item.Value);
