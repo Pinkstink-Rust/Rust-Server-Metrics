@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace RustServerMetrics
         readonly Dictionary<ulong, Action> _playerStatsActions = new Dictionary<ulong, Action>();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new Dictionary<ulong, uint>();
         readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
-        readonly Dictionary<Type, double> _serverInvokes = new Dictionary<Type, double>();
+        readonly Dictionary<MethodInfo, double> _serverInvokes = new Dictionary<MethodInfo, double>();
         internal readonly HashSet<string> _requestedClientPerf = new HashSet<string>(1000);
         readonly int _performanceReport_RequestId = UnityEngine.Random.Range(-2147483648, 2147483647);
 
@@ -232,13 +233,13 @@ namespace RustServerMetrics
         internal void OnServerInvoke(InvokeAction invokeAction, double milliseconds, bool failed)
         {
             if (!Ready) return;
-            var type = invokeAction.sender.GetType();
-            if (!_serverInvokes.TryGetValue(type, out double currentDuration))
+            var methodInfo = invokeAction.action.Method;
+            if (!_serverInvokes.TryGetValue(methodInfo, out double currentDuration))
             {
-                _serverInvokes.Add(type, milliseconds);
+                _serverInvokes.Add(methodInfo, milliseconds);
                 return;
             }
-            _serverInvokes[type] = currentDuration + milliseconds;
+            _serverInvokes[methodInfo] = currentDuration + milliseconds;
         }
 
         internal void LogServerInvokes()
@@ -250,6 +251,8 @@ namespace RustServerMetrics
                 _stringBuilder.Append("invoke_execution,server=");
                 _stringBuilder.Append(Configuration.serverTag);
                 _stringBuilder.Append(",behaviour=\"");
+                _stringBuilder.Append(item.Key.DeclaringType?.Name);
+                _stringBuilder.Append("\",method=\"");
                 _stringBuilder.Append(item.Key.Name);
                 _stringBuilder.Append("\" duration=");
                 _stringBuilder.Append((float)item.Value);
@@ -497,5 +500,6 @@ namespace RustServerMetrics
                 Debug.LogException(ex);
             }
         }
+
     }
 }
