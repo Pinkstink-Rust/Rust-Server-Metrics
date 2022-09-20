@@ -46,7 +46,7 @@ namespace RustServerMetrics.HarmonyPatches
         public static void Postfix(MethodInfo __originalMethod, DateTimeOffset __state)
         {
             var duration = DateTimeOffset.UtcNow - __state;
-            MetricsLogger.Instance.OnServerRPC(__originalMethod, duration.TotalMilliseconds);
+            MetricsLogger.Instance?.OnServerRPC(__originalMethod, duration.TotalMilliseconds);
         }
     }
 }
