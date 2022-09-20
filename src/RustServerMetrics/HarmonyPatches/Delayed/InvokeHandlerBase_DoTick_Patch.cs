@@ -1,14 +1,15 @@
 ﻿using Harmony;
+using RustServerMetrics.HarmonyPatches.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace RustServerMetrics.HarmonyPatches
+namespace RustServerMetrics.HarmonyPatches.Delayed
 {
-    [HarmonyPatch(typeof(InvokeHandlerBase<InvokeHandler>), nameof(InvokeHandlerBase<InvokeHandler>.DoTick))]
-    public static class InvokeHandlerBase_DoTick_Patch
+    [DelayedHarmonyPatch]
+    internal static class InvokeHandlerBase_DoTick_Patch
     {
         static System.Diagnostics.Stopwatch _stopwatch = new System.Diagnostics.Stopwatch();
         static bool _failedExecution = false;
@@ -19,6 +20,12 @@ namespace RustServerMetrics.HarmonyPatches
             new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(InvokeAction), nameof(InvokeAction.action))),
             new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Action), nameof(Action.Invoke)))
         };
+
+        [HarmonyTargetMethods]
+        public static IEnumerable<MethodBase> TargetMethods(HarmonyInstance harmonyInstance)
+        {
+            yield return AccessTools.DeclaredMethod(typeof(InvokeHandlerBase<InvokeHandler>), nameof(InvokeHandlerBase<InvokeHandler>.DoTick));
+        }
 
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> originalInstructions, MethodBase methodBase)

@@ -1,6 +1,8 @@
-﻿using Network;
+﻿using Harmony;
+using Network;
 using Newtonsoft.Json;
 using RustServerMetrics.Config;
+using RustServerMetrics.HarmonyPatches.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,6 +51,22 @@ namespace RustServerMetrics
         internal static void Initialize()
         {
             new GameObject().AddComponent<MetricsLogger>();
+        }
+
+        internal void OnServerStarted()
+        {
+            Debug.Log($"[ServerMetrics]: Applying Startup Patches");
+            var assembly = GetType().Assembly;
+            var harmonyInstance = HarmonyLoader.loadedMods.Single(x => x.Assembly == assembly).Harmony;
+            var nestedTypes = assembly.GetTypes();
+            foreach (var nestedType in nestedTypes)
+            {
+                if (nestedType.GetCustomAttribute<DelayedHarmonyPatchAttribute>(false) == null) continue;
+                var attributes = HarmonyMethod.Merge(new List<HarmonyMethod> { new HarmonyMethod() });
+                var patchProcessor = new PatchProcessor(harmonyInstance, nestedType, attributes);
+                patchProcessor.Patch();
+                Debug.Log($"[ServerMetrics]: Applied Startup Patch: {nestedType.Name}");
+            }
         }
 
         public override void Awake()

@@ -1,12 +1,13 @@
 ﻿using Harmony;
+using RustServerMetrics.HarmonyPatches.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace RustServerMetrics.HarmonyPatches
+namespace RustServerMetrics.HarmonyPatches.Delayed
 {
-    [HarmonyPatch]
-    public class RPCServer_Attribute_Method_Patch
+    [DelayedHarmonyPatch]
+    internal class RPCServer_Attribute_Method_Patch
     {
         [HarmonyTargetMethods]
         public static IEnumerable<MethodBase> TargetMethods(HarmonyInstance harmonyInstance)
