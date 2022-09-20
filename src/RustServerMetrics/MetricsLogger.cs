@@ -1,5 +1,4 @@
-﻿using Facepunch;
-using Network;
+﻿using Network;
 using Newtonsoft.Json;
 using RustServerMetrics.Config;
 using System;
@@ -18,9 +17,11 @@ namespace RustServerMetrics
         readonly StringBuilder _stringBuilder = new StringBuilder();
         readonly Dictionary<ulong, Action> _playerStatsActions = new Dictionary<ulong, Action>();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new Dictionary<ulong, uint>();
+
         readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
         readonly Dictionary<MethodInfo, double> _serverInvokes = new Dictionary<MethodInfo, double>();
         readonly Dictionary<MethodInfo, double> _serverRpcCalls = new Dictionary<MethodInfo, double>();
+        readonly Dictionary<string, double> _serverConsoleCommands = new Dictionary<string, double>();
         internal readonly HashSet<string> _requestedClientPerf = new HashSet<string>(1000);
         readonly int _performanceReport_RequestId = UnityEngine.Random.Range(-2147483648, 2147483647);
 
@@ -75,6 +76,7 @@ namespace RustServerMetrics
                 InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
                 InvokeRepeating(LogServerInvokes, UnityEngine.Random.Range(0f, 1f), 1f);
                 InvokeRepeating(LogRpcTimings, UnityEngine.Random.Range(0f, 1f), 1f);
+                InvokeRepeating(LogConsoleCommand, UnityEngine.Random.Range(0f, 1f), 1f);
                 Ready = true;
             }
         }
@@ -132,6 +134,7 @@ namespace RustServerMetrics
                 CancelInvoke(LogNetworkUpdates);
                 CancelInvoke(LogServerInvokes);
                 CancelInvoke(LogRpcTimings);
+                CancelInvoke(LogConsoleCommand);
                 foreach (var player in _playerStatsActions)
                 {
                     var basePlayer = BasePlayer.FindByID(player.Key);
@@ -153,6 +156,7 @@ namespace RustServerMetrics
                 InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
                 InvokeRepeating(LogServerInvokes, UnityEngine.Random.Range(0f, 1f), 1f);
                 InvokeRepeating(LogRpcTimings, UnityEngine.Random.Range(0f, 1f), 1f);
+                InvokeRepeating(LogConsoleCommand, UnityEngine.Random.Range(0f, 1f), 1f);
             }
             arg.ReplyWith("[ServerMetrics]: Configuration reloaded");
         }
@@ -295,6 +299,36 @@ namespace RustServerMetrics
                 _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
             }
             _serverRpcCalls.Clear();
+        }
+
+        internal void OnConsoleCommand(ConsoleSystem.Arg arg, double milliseconds)
+        {
+            if (!Ready) return;
+            if (!_serverConsoleCommands.TryGetValue(arg.cmd.FullName, out double currentDuration))
+            {
+                _serverConsoleCommands.Add(arg.cmd.FullName, milliseconds);
+                return;
+            }
+            _serverConsoleCommands[arg.cmd.FullName] = currentDuration + milliseconds;
+        }
+
+        internal void LogConsoleCommand()
+        {
+            foreach (var item in _serverConsoleCommands)
+            {
+                var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+                _stringBuilder.Clear();
+                _stringBuilder.Append("console_commands,server=");
+                _stringBuilder.Append(Configuration.serverTag);
+                _stringBuilder.Append(",command=\"");
+                _stringBuilder.Append(item.Key);
+                _stringBuilder.Append("\" duration=");
+                _stringBuilder.Append((float)item.Value);
+                _stringBuilder.Append(" ");
+                _stringBuilder.Append(epochNow);
+                _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
+            }
+            _serverConsoleCommands.Clear();
         }
 
         internal void OnOxidePluginMetrics(Dictionary<string, double> metrics)
