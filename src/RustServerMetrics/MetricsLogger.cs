@@ -24,7 +24,6 @@ namespace RustServerMetrics
         readonly Dictionary<MethodInfo, double> _serverInvokes = new Dictionary<MethodInfo, double>();
         readonly Dictionary<MethodInfo, double> _serverRpcCalls = new Dictionary<MethodInfo, double>();
         readonly Dictionary<string, double> _serverConsoleCommands = new Dictionary<string, double>();
-        internal readonly HashSet<string> _requestedClientPerf = new HashSet<string>(1000);
         readonly int _performanceReport_RequestId = UnityEngine.Random.Range(-2147483648, 2147483647);
 
         public bool Ready { get; private set; }
@@ -145,29 +144,31 @@ namespace RustServerMetrics
 
         void ReloadCfgCommand(ConsoleSystem.Arg arg)
         {
-            LoadConfiguration();
-            if (!ValidateConfiguration() || Configuration.enabled == false)
+            Ready = false;
+            CancelInvoke(LogNetworkUpdates);
+            CancelInvoke(LogServerInvokes);
+            CancelInvoke(LogRpcTimings);
+            CancelInvoke(LogConsoleCommand);
+            foreach (var player in _playerStatsActions)
             {
-                Ready = false;
-                CancelInvoke(LogNetworkUpdates);
-                CancelInvoke(LogServerInvokes);
-                CancelInvoke(LogRpcTimings);
-                CancelInvoke(LogConsoleCommand);
-                foreach (var player in _playerStatsActions)
-                {
-                    var basePlayer = BasePlayer.FindByID(player.Key);
-                    if (basePlayer == null) continue;
-                    basePlayer.CancelInvoke(player.Value);
-                }
-                _reportUploader.Stop();
-
-                if (!Configuration.enabled)
-                {
-                    arg.ReplyWith("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
-                    return;
-                }
+                var basePlayer = BasePlayer.FindByID(player.Key);
+                if (basePlayer == null) continue;
+                basePlayer.CancelInvoke(player.Value);
             }
-            else if (!Ready)
+            _playerStatsActions.Clear();
+            _reportUploader.Stop();
+
+            LoadConfiguration();
+
+            if (!ValidateConfiguration()) return;
+
+            if (!Configuration.enabled)
+            {
+                arg.ReplyWith("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
+                return;
+            }
+
+            if (!Ready)
             {
                 Ready = true;
                 foreach (var player in BasePlayer.activePlayerList) OnPlayerInit(player);
@@ -182,6 +183,7 @@ namespace RustServerMetrics
         internal void OnPlayerInit(BasePlayer player)
         {
             if (!Ready) return;
+            if (!Configuration.gatherPlayerMetrics) return;
             var action = new Action(() => GatherPlayerSecondStats(player));
             if (_playerStatsActions.TryGetValue(player.userID, out Action existingAction))
                 player.CancelInvoke(existingAction);
@@ -192,10 +194,10 @@ namespace RustServerMetrics
         internal void OnPlayerDisconnected(BasePlayer player)
         {
             if (!Ready) return;
+            if (!Configuration.gatherPlayerMetrics) return;
             if (_playerStatsActions.TryGetValue(player.userID, out Action action))
                 player.CancelInvoke(action);
             _playerStatsActions.Remove(player.userID);
-            _requestedClientPerf.Remove(player.UserIDString);
         }
 
         internal void OnNetWritePacketID(Message.Type messageType)
@@ -385,7 +387,6 @@ namespace RustServerMetrics
             _stringBuilder.Append(" ");
             _stringBuilder.Append(epochNow);
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            _requestedClientPerf.Remove(clientPerformanceReport.user_id);
             return true;
         }
 
@@ -401,7 +402,6 @@ namespace RustServerMetrics
                 else
                 {
                     _perfReportDelayCounter[player.userID] = 0;
-                    _requestedClientPerf.Add(player.UserIDString);
                     player.ClientRPCPlayer(null, player, "GetPerformanceReport", "legacy", _performanceReport_RequestId);
                 }
             }
