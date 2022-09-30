@@ -10,38 +10,38 @@ using UnityEngine;
 namespace RustServerMetrics.HarmonyPatches.Delayed
 {
     [DelayedHarmonyPatch]
-    internal class RPCServer_Attribute_Method_Patch
+    internal static class ObjectWorkQueue_RunJob_Patch
     {
         [HarmonyTargetMethods]
         public static IEnumerable<MethodBase> TargetMethods(HarmonyInstance harmonyInstance)
         {
-            var baseNetworkableType = typeof(BaseNetworkable);
-            var baseNetworkableAssembly = baseNetworkableType.Assembly;
-            Stack<Type> typesToScan = new Stack<Type>(baseNetworkableAssembly.GetTypes());
-
+            var assemblyCSharp = typeof(BaseNetworkable).Assembly;
+            Stack<Type> typesToScan = new Stack<Type>(assemblyCSharp.GetTypes());
+            HashSet<string> yielded = new ();
+            
             while (typesToScan.TryPop(out Type type))
             {
                 var subTypes = type.GetNestedTypes();
-                for (int i = 0; i < subTypes.Length; i++)
-                    typesToScan.Push(subTypes[i]);
+                foreach (var t in subTypes)
+                    typesToScan.Push(t);
 
-                var methods = type.GetMethods();
-                for (int i = 0; i < methods.Length; i++)
+                if (type.BaseType == null || !type.BaseType.Name.Contains("ObjectWorkQueue"))
+                    continue;
+
+                if (!yielded.Contains(type.FullName))
                 {
-                    var method = methods[i];
-                    if (method.DeclaringType == method.ReflectedType && method.GetCustomAttribute<BaseEntity.RPC_Server>() != null)
-                    {
-                        yield return method;
-                    }
+                    yielded.Add(type.FullName);
+                    yield return AccessTools.Method(type, "RunJob");
                 }
             }
-        } 
+        }
+
         
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> originalInstructions, MethodBase methodBase, ILGenerator ilGenerator)
         {
             Debug.Log($"Transpiling {methodBase.Name}");
-
+            
             List<CodeInstruction> ret = originalInstructions.ToList();
             LocalBuilder local = ilGenerator.DeclareLocal(typeof(DateTime));
             
@@ -65,7 +65,7 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
                 return;
             
             var duration = DateTime.UtcNow - __state;
-            MetricsLogger.Instance.ServerRpcCalls.LogTime(methodName, duration.TotalMilliseconds);
+            MetricsLogger.Instance.WorkQueueTimes.LogTime(methodName, duration.TotalMilliseconds);
         }
     }
 }

@@ -16,38 +16,48 @@ namespace RustServerMetrics
     public class MetricsLogger : SingletonComponent<MetricsLogger>
     {
         const string CONFIGURATION_PATH = "HarmonyMods_Data/ServerMetrics/Configuration.json";
-        readonly StringBuilder _stringBuilder = new StringBuilder();
-        readonly Dictionary<ulong, Action> _playerStatsActions = new Dictionary<ulong, Action>();
-        readonly Dictionary<ulong, uint> _perfReportDelayCounter = new Dictionary<ulong, uint>();
+        readonly StringBuilder _stringBuilder = new();
+        readonly Dictionary<ulong, Action> _playerStatsActions = new();
+        readonly Dictionary<ulong, uint> _perfReportDelayCounter = new();
 
-        readonly Dictionary<Message.Type, int> _networkUpdates = new Dictionary<Message.Type, int>();
-        readonly Dictionary<MethodInfo, double> _serverInvokes = new Dictionary<MethodInfo, double>();
-        readonly Dictionary<MethodInfo, double> _serverRpcCalls = new Dictionary<MethodInfo, double>();
-        readonly Dictionary<string, double> _serverConsoleCommands = new Dictionary<string, double>();
-        internal readonly HashSet<string> _requestedClientPerf = new HashSet<string>(1000);
-        readonly int _performanceReport_RequestId = UnityEngine.Random.Range(-2147483648, 2147483647);
-
+        readonly Dictionary<Message.Type, int> _networkUpdates = new();
+        
+        public readonly MetricsTimeStorage<MethodInfo> ServerInvokes = new ("invoke_execution", LogMethodInfo);
+        public readonly MetricsTimeStorage<string> ServerRpcCalls = new("rpc_calls", LogMethodName);
+        public readonly MetricsTimeStorage<string> WorkQueueTimes = new ("work_queue", LogMethodName);
+        public readonly MetricsTimeStorage<string> ServerUpdate = new ("server_update", LogMethodName);
+        public readonly MetricsTimeStorage<string> TimeWarnings = new ("timewarnings", LogMethodName);
+        public readonly MetricsTimeStorage<string> ServerConsoleCommands = new ("console_commands", (builder, command) =>
+        {
+            builder.Append(",command=\"");
+            builder.Append(command);
+        });
+        
         public bool Ready { get; private set; }
         internal ConfigData Configuration { get; private set; }
+
+        Uri _baseUri;
+        internal readonly HashSet<string> _requestedClientPerf = new(1000);
+        readonly int _performanceReport_RequestId = UnityEngine.Random.Range(-2147483648, 2147483647);
         ReportUploader _reportUploader;
         Message.Type _lastMessageType;
-        bool _firstReportGenerated = false;
-        Uri _baseUri;
-
-        public bool DebugLogging => Configuration?.debugLogging == true;
+        bool _firstReportGenerated;
+        
         public Uri BaseUri
         {
             get
             {
-                if (_baseUri == null)
-                {
-                    var uri = new Uri(Configuration.databaseUrl);
-                    _baseUri = new Uri(uri, $"/write?db={Configuration.databaseName}&precision=ms&u={Configuration.databaseUser}&p={Configuration.databasePassword}");
-                }
+                if (_baseUri != null) 
+                    return _baseUri;
+                
+                var uri = new Uri(Configuration.databaseUrl);
+                _baseUri = new Uri(uri, $"/write?db={Configuration.databaseName}&precision=ms&u={Configuration.databaseUser}&p={Configuration.databasePassword}");
                 return _baseUri;
             }
         }
 
+        #region Initialization
+        
         internal static void Initialize()
         {
             new GameObject().AddComponent<MetricsLogger>();
@@ -57,14 +67,22 @@ namespace RustServerMetrics
         {
             Debug.Log($"[ServerMetrics]: Applying Startup Patches");
             var assembly = GetType().Assembly;
-            var harmonyInstance = HarmonyLoader.loadedMods.Single(x => x.Assembly == assembly).Harmony;
+            
+            var harmonyInstance = HarmonyLoader.loadedMods.FirstOrDefault(x => x.Assembly == assembly)?.Harmony;
+            if (harmonyInstance == null)
+            {
+                RustServerMetricsLoader.__harmonyInstance ??= HarmonyInstance.Create("RustServerMetrics" + "PATCH");
+                harmonyInstance = RustServerMetricsLoader.__harmonyInstance;
+            }
+            
             var nestedTypes = assembly.GetTypes();
             foreach (var nestedType in nestedTypes)
             {
                 if (nestedType.GetCustomAttribute<DelayedHarmonyPatchAttribute>(false) == null) continue;
-                var attributes = HarmonyMethod.Merge(new List<HarmonyMethod> { new HarmonyMethod() });
+                var attributes = HarmonyMethod.Merge(new List<HarmonyMethod> { new() });
                 var patchProcessor = new PatchProcessor(harmonyInstance, nestedType, attributes);
                 patchProcessor.Patch();
+                
                 Debug.Log($"[ServerMetrics]: Applied Startup Patch: {nestedType.Name}");
             }
         }
@@ -91,94 +109,26 @@ namespace RustServerMetrics
                     return;
                 }
 
-                InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
-                InvokeRepeating(LogServerInvokes, UnityEngine.Random.Range(0f, 1f), 1f);
-                InvokeRepeating(LogRpcTimings, UnityEngine.Random.Range(0f, 1f), 1f);
-                InvokeRepeating(LogConsoleCommand, UnityEngine.Random.Range(0f, 1f), 1f);
+                StartLoggingMetrics();
                 Ready = true;
             }
         }
 
-        void RegisterCommands()
+        public void StartLoggingMetrics()
         {
-            const string commandPrefix = "servermetrics";
-            ConsoleSystem.Command reloadCfgCommand = new ConsoleSystem.Command()
-            {
-                Name = "reloadcfg",
-                Parent = commandPrefix,
-                FullName = commandPrefix + "." + "reloadcfg",
-                ServerAdmin = true,
-                Variable = false,
-                Call = new Action<ConsoleSystem.Arg>(ReloadCfgCommand)
-            };
-            ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "reloadcfg"] = reloadCfgCommand;
-
-            ConsoleSystem.Command statusCommand = new ConsoleSystem.Command()
-            {
-                Name = "status",
-                Parent = commandPrefix,
-                FullName = commandPrefix + "." + "status",
-                ServerAdmin = true,
-                Variable = false,
-                Call = new Action<ConsoleSystem.Arg>(StatusCommand)
-            };
-            ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "status"] = statusCommand;
-
-            ConsoleSystem.Command[] allCommands = ConsoleSystem.Index.All.Concat(new ConsoleSystem.Command[] { reloadCfgCommand, statusCommand }).ToArray();
-            // Would be nice if this had a public setter, or better yet, a register command helper
-            typeof(ConsoleSystem.Index)
-                .GetProperty(nameof(ConsoleSystem.Index.All), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
-                .SetValue(null, allCommands);
+            InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
+                
+            InvokeRepeating(ServerInvokes.SerializeToStringBuilder, UnityEngine.Random.Range(0f, 1f), 1f);
+            InvokeRepeating(ServerRpcCalls.SerializeToStringBuilder, UnityEngine.Random.Range(0f, 1f), 1f);
+            InvokeRepeating(ServerConsoleCommands.SerializeToStringBuilder, UnityEngine.Random.Range(0f, 1f), 1f);
+            InvokeRepeating(WorkQueueTimes.SerializeToStringBuilder, UnityEngine.Random.Range(0f, 1f), 1f);
+            InvokeRepeating(ServerUpdate.SerializeToStringBuilder, UnityEngine.Random.Range(0f, 1f), 1f);
+            InvokeRepeating(TimeWarnings.SerializeToStringBuilder, UnityEngine.Random.Range(0f, 1f), 1f);
         }
 
-        void StatusCommand(ConsoleSystem.Arg arg)
-        {
-            _stringBuilder.Clear();
-            _stringBuilder.AppendLine("[ServerMetrics]: Status");
-            _stringBuilder.AppendLine("Overview");
-            _stringBuilder.Append("\tReady: "); _stringBuilder.Append(Ready); _stringBuilder.AppendLine();
-            _stringBuilder.AppendLine("Report Uploader:");
-            _stringBuilder.Append("\tRunning: "); _stringBuilder.Append(_reportUploader.IsRunning); _stringBuilder.AppendLine();
-            _stringBuilder.Append("\tIn Buffer: "); _stringBuilder.Append(_reportUploader.BufferSize); _stringBuilder.AppendLine();
-            arg.ReplyWith(_stringBuilder.ToString());
-        }
-
-        void ReloadCfgCommand(ConsoleSystem.Arg arg)
-        {
-            LoadConfiguration();
-            if (!ValidateConfiguration() || Configuration.enabled == false)
-            {
-                Ready = false;
-                CancelInvoke(LogNetworkUpdates);
-                CancelInvoke(LogServerInvokes);
-                CancelInvoke(LogRpcTimings);
-                CancelInvoke(LogConsoleCommand);
-                foreach (var player in _playerStatsActions)
-                {
-                    var basePlayer = BasePlayer.FindByID(player.Key);
-                    if (basePlayer == null) continue;
-                    basePlayer.CancelInvoke(player.Value);
-                }
-                _reportUploader.Stop();
-
-                if (!Configuration.enabled)
-                {
-                    arg.ReplyWith("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
-                    return;
-                }
-            }
-            else if (!Ready)
-            {
-                Ready = true;
-                foreach (var player in BasePlayer.activePlayerList) OnPlayerInit(player);
-                InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
-                InvokeRepeating(LogServerInvokes, UnityEngine.Random.Range(0f, 1f), 1f);
-                InvokeRepeating(LogRpcTimings, UnityEngine.Random.Range(0f, 1f), 1f);
-                InvokeRepeating(LogConsoleCommand, UnityEngine.Random.Range(0f, 1f), 1f);
-            }
-            arg.ReplyWith("[ServerMetrics]: Configuration reloaded");
-        }
-
+        #endregion
+        
+        
         internal void OnPlayerInit(BasePlayer player)
         {
             if (!Ready) return;
@@ -215,6 +165,75 @@ namespace RustServerMetrics
             {
                 _networkUpdates[_lastMessageType] += sendInfo.connections.Count;
             }
+        }
+        
+        
+        internal void OnOxidePluginMetrics(Dictionary<string, double> metrics)
+        {
+            if (!Ready) return;
+            if (metrics.Count < 1) return;
+
+            foreach (var metric in metrics)
+            {
+                UploadPacket("oxide_plugins", metric, (builder, report) =>
+                {
+                    builder.Append(",plugin=\"");
+                    builder.Append(report.Key);
+                    builder.Append("\" hookTime=");
+                    builder.Append(report.Value);
+                });  
+            }
+        }
+
+        internal bool OnClientPerformanceReport(ClientPerformanceReport clientPerformanceReport)
+        {
+            if (clientPerformanceReport.request_id != _performanceReport_RequestId) return false;
+
+            UploadPacket("client_performance", clientPerformanceReport, (builder, report) =>
+            {
+                builder.Append(",steamid=");
+                builder.Append(report.user_id);
+                builder.Append(" memory=");
+                builder.Append(report.memory_system);
+                builder.Append("i,fps=");
+                builder.Append(report.fps);
+            });
+            
+            _requestedClientPerf.Remove(clientPerformanceReport.user_id);
+            return true;
+        }
+
+        void GatherPlayerSecondStats(BasePlayer player)
+        {
+            if (!player.IsReceivingSnapshot)
+            {
+                _perfReportDelayCounter.TryGetValue(player.userID, out uint perfReportCounter);
+                if (perfReportCounter < 4)
+                {
+                    _perfReportDelayCounter[player.userID] = perfReportCounter + 1;
+                }
+                else
+                {
+                    _perfReportDelayCounter[player.userID] = 0;
+                    _requestedClientPerf.Add(player.UserIDString);
+                    player.ClientRPCPlayer(null, player, "GetPerformanceReport", "legacy", _performanceReport_RequestId);
+                }
+            }
+
+            UploadPacket("connection_latency", player, (builder, basePlayer) =>
+            {
+                var ip = basePlayer.net.connection.ipaddress;
+
+                builder.Append(",steamid=");
+                builder.Append(basePlayer.UserIDString);
+                builder.Append(",ip=");
+                builder.Append(ip.Substring(0, ip.LastIndexOf(':')));
+                builder.Append(" ping="); 
+                builder.Append(Net.sv.GetAveragePing(basePlayer.net.connection));
+                builder.Append("i,packet_loss=");
+                builder.Append(Net.sv.GetStat(basePlayer.net.connection, BaseNetwork.StatTypeLong.PacketLossLastSecond));
+                builder.Append("i ");
+            });  
         }
 
         void LogNetworkUpdates()
@@ -253,180 +272,7 @@ namespace RustServerMetrics
                 _networkUpdates[key] = 0;
             }
         }
-
-        internal void OnServerInvoke(InvokeAction invokeAction, double milliseconds, bool failed)
-        {
-            if (!Ready) return;
-            var methodInfo = invokeAction.action.Method;
-            if (!_serverInvokes.TryGetValue(methodInfo, out double currentDuration))
-            {
-                _serverInvokes.Add(methodInfo, milliseconds);
-                return;
-            }
-            _serverInvokes[methodInfo] = currentDuration + milliseconds;
-        }
-
-        internal void LogServerInvokes()
-        {
-            foreach (var item in _serverInvokes)
-            {
-                var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-                _stringBuilder.Clear();
-                _stringBuilder.Append("invoke_execution,server=");
-                _stringBuilder.Append(Configuration.serverTag);
-                _stringBuilder.Append(",behaviour=\"");
-                _stringBuilder.Append(item.Key.DeclaringType?.Name);
-                _stringBuilder.Append("\",method=\"");
-                _stringBuilder.Append(item.Key.Name);
-                _stringBuilder.Append("\" duration=");
-                _stringBuilder.Append((float)item.Value);
-                _stringBuilder.Append(" ");
-                _stringBuilder.Append(epochNow);
-                _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            }
-            _serverInvokes.Clear();
-        }
-
-        internal void OnServerRPC(MethodInfo methodInfo, double milliseconds)
-        {
-            if (!Ready) return;
-            if (!_serverRpcCalls.TryGetValue(methodInfo, out double currentDuration))
-            {
-                _serverRpcCalls.Add(methodInfo, milliseconds);
-                return;
-            }
-            _serverRpcCalls[methodInfo] = currentDuration + milliseconds;
-        }
-
-        internal void LogRpcTimings()
-        {
-            foreach (var item in _serverRpcCalls)
-            {
-                var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-                _stringBuilder.Clear();
-                _stringBuilder.Append("rpc_calls,server=");
-                _stringBuilder.Append(Configuration.serverTag);
-                _stringBuilder.Append(",behaviour=\"");
-                _stringBuilder.Append(item.Key.DeclaringType?.Name);
-                _stringBuilder.Append("\",method=\"");
-                _stringBuilder.Append(item.Key.Name);
-                _stringBuilder.Append("\" duration=");
-                _stringBuilder.Append((float)item.Value);
-                _stringBuilder.Append(" ");
-                _stringBuilder.Append(epochNow);
-                _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            }
-            _serverRpcCalls.Clear();
-        }
-
-        internal void OnConsoleCommand(ConsoleSystem.Arg arg, double milliseconds)
-        {
-            if (!Ready) return;
-            if (!_serverConsoleCommands.TryGetValue(arg.cmd.FullName, out double currentDuration))
-            {
-                _serverConsoleCommands.Add(arg.cmd.FullName, milliseconds);
-                return;
-            }
-            _serverConsoleCommands[arg.cmd.FullName] = currentDuration + milliseconds;
-        }
-
-        internal void LogConsoleCommand()
-        {
-            foreach (var item in _serverConsoleCommands)
-            {
-                var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-                _stringBuilder.Clear();
-                _stringBuilder.Append("console_commands,server=");
-                _stringBuilder.Append(Configuration.serverTag);
-                _stringBuilder.Append(",command=\"");
-                _stringBuilder.Append(item.Key);
-                _stringBuilder.Append("\" duration=");
-                _stringBuilder.Append((float)item.Value);
-                _stringBuilder.Append(" ");
-                _stringBuilder.Append(epochNow);
-                _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            }
-            _serverConsoleCommands.Clear();
-        }
-
-        internal void OnOxidePluginMetrics(Dictionary<string, double> metrics)
-        {
-            if (!Ready) return;
-            if (metrics.Count < 1) return;
-            var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-            foreach (var metric in metrics)
-            {
-                _stringBuilder.Clear();
-                _stringBuilder.Append("oxide_plugins,server=");
-                _stringBuilder.Append(Configuration.serverTag);
-                _stringBuilder.Append(",plugin=\"");
-                _stringBuilder.Append(metric.Key);
-                _stringBuilder.Append("\" hookTime=");
-                _stringBuilder.Append(metric.Value);
-                _stringBuilder.Append(" ");
-                _stringBuilder.Append(epochNow);
-                _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            }
-        }
-
-        internal bool OnClientPerformanceReport(ClientPerformanceReport clientPerformanceReport)
-        {
-            if (clientPerformanceReport.request_id != _performanceReport_RequestId) return false;
-            var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-            _stringBuilder.Clear();
-            _stringBuilder.Append("client_performance,server=");
-            _stringBuilder.Append(Configuration.serverTag);
-            _stringBuilder.Append(",steamid=");
-            _stringBuilder.Append(clientPerformanceReport.user_id);
-            _stringBuilder.Append(" memory=");
-            _stringBuilder.Append(clientPerformanceReport.memory_system);
-            _stringBuilder.Append("i,fps=");
-            _stringBuilder.Append(clientPerformanceReport.fps);
-            _stringBuilder.Append(" ");
-            _stringBuilder.Append(epochNow);
-            _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-            _requestedClientPerf.Remove(clientPerformanceReport.user_id);
-            return true;
-        }
-
-        void GatherPlayerSecondStats(BasePlayer player)
-        {
-            if (!player.IsReceivingSnapshot)
-            {
-                _perfReportDelayCounter.TryGetValue(player.userID, out uint perfReportCounter);
-                if (perfReportCounter < 4)
-                {
-                    _perfReportDelayCounter[player.userID] = perfReportCounter + 1;
-                }
-                else
-                {
-                    _perfReportDelayCounter[player.userID] = 0;
-                    _requestedClientPerf.Add(player.UserIDString);
-                    player.ClientRPCPlayer(null, player, "GetPerformanceReport", "legacy", _performanceReport_RequestId);
-                }
-            }
-
-            var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-            _stringBuilder.Clear();
-            _stringBuilder.Append("connection_latency,server=");
-            _stringBuilder.Append(Configuration.serverTag);
-            _stringBuilder.Append(",steamid=");
-            _stringBuilder.Append(player.UserIDString);
-            _stringBuilder.Append(",ip=");
-            var colonIndex = player.net.connection.ipaddress.LastIndexOf(':');
-            var portStrippedIp = player.net.connection.ipaddress.Substring(0, colonIndex);
-            _stringBuilder.Append(portStrippedIp);
-            _stringBuilder.Append(" ping=");
-            var averagePing = Net.sv.GetAveragePing(player.net.connection);
-            _stringBuilder.Append(averagePing);
-            _stringBuilder.Append("i,packet_loss=");
-            var packetLoss = Net.sv.GetStat(player.net.connection, BaseNetwork.StatTypeLong.PacketLossLastSecond);
-            _stringBuilder.Append(packetLoss);
-            _stringBuilder.Append("i ");
-            _stringBuilder.Append(epochNow);
-            _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-        }
-
+        
         internal void OnPerformanceReportGenerated()
         {
             if (!Ready) return;
@@ -522,6 +368,142 @@ namespace RustServerMetrics
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
         }
 
+        
+        #region Helpers
+
+        public void UploadPacket<T>(string ID, T data, Action<StringBuilder, T> serializer)
+        {
+            var epochNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+            _stringBuilder.Clear();
+            _stringBuilder.Append(ID);
+            _stringBuilder.Append(",server=");
+            _stringBuilder.Append(Configuration.serverTag); 
+            
+            serializer.Invoke(_stringBuilder, data);
+
+            _stringBuilder.Append(" ");
+            _stringBuilder.Append(epochNow);
+            
+            AddToSendBuffer(_stringBuilder.ToString());
+        }
+        
+        public void AddToSendBuffer(string toString) => _reportUploader.AddToSendBuffer(toString);
+
+        private static void LogMethodInfo(StringBuilder builder, MethodInfo info)
+        {
+            builder.Append(",behaviour=\"");
+            builder.Append(info.DeclaringType?.Name);
+            builder.Append("\",method=\"");
+            builder.Append(info.Name);
+        }
+
+        private static void LogMethodName(StringBuilder builder, string info)
+        {
+            builder.Append(",behaviour=\"");
+
+            foreach (var cursor in info)
+            {
+                if (cursor == '.')
+                    builder.Append("\",method=\"");
+                else
+                    builder.Append(cursor);
+            }
+        }
+        #endregion
+
+        
+        #region Commands
+
+        void RegisterCommands()
+        {
+            const string commandPrefix = "servermetrics";
+            ConsoleSystem.Command reloadCfgCommand = new ConsoleSystem.Command()
+            {
+                Name = "reloadcfg",
+                Parent = commandPrefix,
+                FullName = commandPrefix + "." + "reloadcfg",
+                ServerAdmin = true,
+                Variable = false,
+                Call = new Action<ConsoleSystem.Arg>(ReloadCfgCommand)
+            };
+
+            ConsoleSystem.Command statusCommand = new ConsoleSystem.Command()
+            {
+                Name = "status",
+                Parent = commandPrefix,
+                FullName = commandPrefix + "." + "status",
+                ServerAdmin = true,
+                Variable = false,
+                Call = new Action<ConsoleSystem.Arg>(StatusCommand)
+            };
+            
+            ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "reloadcfg"] = reloadCfgCommand;
+            ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "status"] = statusCommand;
+
+            // Would be nice if this had a public setter, or better yet, a register command helper
+            // update: now it does
+            ConsoleSystem.Index.All = ConsoleSystem.Index.All.Concat(new [] { reloadCfgCommand, statusCommand }).ToArray();
+        }
+
+        void StatusCommand(ConsoleSystem.Arg arg)
+        {
+            _stringBuilder.Clear();
+            _stringBuilder.AppendLine("[ServerMetrics]: Status");
+            _stringBuilder.AppendLine("Overview");
+            _stringBuilder.Append("\tReady: "); _stringBuilder.Append(Ready); _stringBuilder.AppendLine();
+            _stringBuilder.AppendLine("Report Uploader:");
+            _stringBuilder.Append("\tRunning: "); _stringBuilder.Append(_reportUploader.IsRunning); _stringBuilder.AppendLine();
+            _stringBuilder.Append("\tIn Buffer: "); _stringBuilder.Append(_reportUploader.BufferSize); _stringBuilder.AppendLine();
+            arg.ReplyWith(_stringBuilder.ToString());
+        }
+
+        void ReloadCfgCommand(ConsoleSystem.Arg arg)
+        {
+            LoadConfiguration();
+            if (!ValidateConfiguration() || Configuration.enabled == false)
+            {
+                Ready = false;
+
+                // why is there no cancel all invokes method ...
+                var list = new List<InvokeAction>();
+                InvokeHandler.FindInvokes(this, list);
+                foreach (var invoke in list)
+                {
+                    CancelInvoke(invoke.action);
+                }
+                 
+                foreach (var player in _playerStatsActions)
+                {
+                    var basePlayer = BasePlayer.FindByID(player.Key);
+                    if (basePlayer == null) continue;
+                    basePlayer.CancelInvoke(player.Value);
+                }
+                _reportUploader.Stop();
+
+                if (!Configuration.enabled)
+                {
+                    arg.ReplyWith("[ServerMetrics]: Metrics gathering has been disabled in the configuration");
+                    return;
+                }
+            }
+            else if (!Ready)
+            {
+                Ready = true;
+                foreach (var player in BasePlayer.activePlayerList)
+                {
+                    OnPlayerInit(player);
+                }
+                
+                StartLoggingMetrics();
+            }
+            arg.ReplyWith("[ServerMetrics]: Configuration reloaded");
+        }
+
+        #endregion
+        
+        
+        #region Configuration
+        
         bool ValidateConfiguration()
         {
             if (Configuration == null) return false;
@@ -586,6 +568,7 @@ namespace RustServerMetrics
                 Debug.LogException(ex);
             }
         }
-
+        
+        #endregion
     }
 }

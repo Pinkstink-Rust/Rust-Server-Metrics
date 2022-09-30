@@ -23,6 +23,8 @@ namespace RustServerMetrics
         Uri _uri = null;
         MetricsLogger _metricsLogger;
 
+        private char[] charBuffer = new char[8192 * 4];
+        
         bool _throttleNetworkErrorMessages = false;
         uint _accumulatedNetworkErrors = 0;
 
@@ -40,7 +42,7 @@ namespace RustServerMetrics
         }
         public bool IsRunning => _isRunning;
         public int BufferSize => _sendBuffer.Count;
-
+        
         public ReportUploader()
         {
             _notifySubsequentNetworkFailuresAction = new Action(NotifySubsequentNetworkFailures);
@@ -83,7 +85,14 @@ namespace RustServerMetrics
                 }
                 _sendBuffer.RemoveRange(0, amountToTake);
                 _attempt = 0;
-                _data = Encoding.UTF8.GetBytes(_payloadBuilder.ToString());
+                
+                // more GC friendly GetBytes implementation
+                if (_payloadBuilder.Length > charBuffer.Length)
+                    charBuffer = new char[charBuffer.Length * 2];
+                
+                _payloadBuilder.CopyTo(0, charBuffer, 0, _payloadBuilder.Length);
+                _data = Encoding.UTF8.GetBytes(charBuffer, 0, _payloadBuilder.Length);
+                
                 _uri = _metricsLogger.BaseUri;
                 _payloadBuilder.Clear();
                 yield return SendRequest();
@@ -134,7 +143,7 @@ namespace RustServerMetrics
                 else
                 {
                     Debug.LogError($"A HTTP error occurred while submitting batch of metrics: {request.error}");
-                    if (_metricsLogger.DebugLogging) Debug.LogError(request.downloadHandler.text);
+                    if (_metricsLogger.Configuration?.debugLogging == true) Debug.LogError(request.downloadHandler.text);
                     InvokeHandler.Invoke(this, _notifySubsequentHttpFailuresAction, 5);
                     _throttleHttpErrorMessages = true;
                 }
