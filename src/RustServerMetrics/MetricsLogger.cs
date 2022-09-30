@@ -20,7 +20,6 @@ namespace RustServerMetrics
         readonly Dictionary<ulong, Action> _playerStatsActions = new();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new();
 
-        readonly int _performanceReport_RequestId = UnityEngine.Random.Range(-2147483648, 2147483647);
         readonly Dictionary<Message.Type, int> _networkUpdates = new();
         
         public readonly MetricsTimeStorage<MethodInfo> ServerInvokes = new ("invoke_execution", LogMethodInfo);
