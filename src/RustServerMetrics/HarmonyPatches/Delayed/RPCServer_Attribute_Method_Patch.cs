@@ -40,8 +40,6 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> originalInstructions, MethodBase methodBase, ILGenerator ilGenerator)
         {
-            Debug.Log($"Transpiling {methodBase.Name}");
-
             List<CodeInstruction> ret = originalInstructions.ToList();
             LocalBuilder local = ilGenerator.DeclareLocal(typeof(DateTime));
             
