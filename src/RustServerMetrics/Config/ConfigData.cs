@@ -33,5 +33,8 @@ namespace RustServerMetrics.Config
 
         [JsonProperty(PropertyName = "Amount of metrics to submit in each request")]
         public ushort batchSize = 1000;
+
+        [JsonProperty(PropertyName = "Gather Player Averages (Client FPS, Client Latency, Player FPS, Player Memory, Player Latency, Player Packet Loss)")]
+        public bool gatherPlayerMetrics = true;
     }
 }

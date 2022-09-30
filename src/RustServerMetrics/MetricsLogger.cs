@@ -20,6 +20,7 @@ namespace RustServerMetrics
         readonly Dictionary<ulong, Action> _playerStatsActions = new();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new();
 
+        readonly int _performanceReport_RequestId = UnityEngine.Random.Range(-2147483648, 2147483647);
         readonly Dictionary<Message.Type, int> _networkUpdates = new();
         
         public readonly MetricsTimeStorage<MethodInfo> ServerInvokes = new ("invoke_execution", LogMethodInfo);
@@ -132,6 +133,7 @@ namespace RustServerMetrics
         internal void OnPlayerInit(BasePlayer player)
         {
             if (!Ready) return;
+            if (!Configuration.gatherPlayerMetrics) return;
             var action = new Action(() => GatherPlayerSecondStats(player));
             if (_playerStatsActions.TryGetValue(player.userID, out Action existingAction))
                 player.CancelInvoke(existingAction);
@@ -142,10 +144,10 @@ namespace RustServerMetrics
         internal void OnPlayerDisconnected(BasePlayer player)
         {
             if (!Ready) return;
+            if (!Configuration.gatherPlayerMetrics) return;
             if (_playerStatsActions.TryGetValue(player.userID, out Action action))
                 player.CancelInvoke(action);
             _playerStatsActions.Remove(player.userID);
-            _requestedClientPerf.Remove(player.UserIDString);
         }
 
         internal void OnNetWritePacketID(Message.Type messageType)
@@ -215,7 +217,6 @@ namespace RustServerMetrics
                 else
                 {
                     _perfReportDelayCounter[player.userID] = 0;
-                    _requestedClientPerf.Add(player.UserIDString);
                     player.ClientRPCPlayer(null, player, "GetPerformanceReport", "legacy", _performanceReport_RequestId);
                 }
             }
