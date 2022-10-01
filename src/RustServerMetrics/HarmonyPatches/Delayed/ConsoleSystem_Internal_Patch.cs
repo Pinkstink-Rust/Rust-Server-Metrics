@@ -24,8 +24,11 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
         [HarmonyPostfix]
         public static void Postfix(ConsoleSystem.Arg arg, DateTimeOffset __state)
         {
+            if (MetricsLogger.Instance == null)
+                return;
+            
             var duration = DateTimeOffset.UtcNow - __state;
-            MetricsLogger.Instance?.OnConsoleCommand(arg, duration.TotalMilliseconds);
+            MetricsLogger.Instance.ServerConsoleCommands.LogTime(arg.cmd.FullName, duration.TotalMilliseconds);
         }
     }
 }
