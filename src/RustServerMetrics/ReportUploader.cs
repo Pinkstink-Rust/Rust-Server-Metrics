@@ -85,13 +85,21 @@ namespace RustServerMetrics
                 }
                 _sendBuffer.RemoveRange(0, amountToTake);
                 _attempt = 0;
-                
-                // more GC friendly GetBytes implementation
-                if (_payloadBuilder.Length > charBuffer.Length)
-                    charBuffer = new char[charBuffer.Length * 2];
-                
-                _payloadBuilder.CopyTo(0, charBuffer, 0, _payloadBuilder.Length);
-                _data = Encoding.UTF8.GetBytes(charBuffer, 0, _payloadBuilder.Length);
+
+                try
+                {
+                    // more GC friendly GetBytes implementation
+                    if (_payloadBuilder.Length > charBuffer.Length)
+                        charBuffer = new char[Math.Min(_payloadBuilder.Length + 1024, charBuffer.Length * 2)];
+
+                    _payloadBuilder.CopyTo(0, charBuffer, 0, _payloadBuilder.Length);
+                    _data = Encoding.UTF8.GetBytes(charBuffer, 0, _payloadBuilder.Length);
+                }
+                catch (Exception e)
+                {
+                    Debug.Log(e);
+                    _data = Encoding.UTF8.GetBytes(_payloadBuilder.ToString());
+                }
                 
                 _uri = _metricsLogger.BaseUri;
                 _payloadBuilder.Clear();
