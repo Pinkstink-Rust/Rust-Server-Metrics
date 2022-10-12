@@ -114,7 +114,7 @@ namespace RustServerMetrics
             {
                 uploadHandler = new UploadHandlerRaw(_data),
                 downloadHandler = new DownloadHandlerBuffer(),
-                timeout = 5,
+                timeout = 15,
                 useHttpContinue = true,
                 redirectLimit = 5
             };
