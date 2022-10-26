@@ -20,7 +20,14 @@ namespace RustServerMetrics
         readonly Dictionary<ulong, Action> _playerStatsActions = new();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new();
 
-        readonly Dictionary<Message.Type, int> _networkUpdates = new();
+        // Class means we don't have to reassign it to the dictionary for every increment
+        private class NetworkUpdateData
+        {
+            public int Count;
+            public int Bytes;
+        }
+
+        readonly Dictionary<Message.Type, NetworkUpdateData> _networkUpdates = new();
         
         public readonly MetricsTimeStorage<MethodInfo> ServerInvokes = new ("invoke_execution", LogMethodInfo);
         public readonly MetricsTimeStorage<string> ServerRpcCalls = new("rpc_calls", LogMethodName);
@@ -95,7 +102,7 @@ namespace RustServerMetrics
             {
                 if (_networkUpdates.ContainsKey(messageType))
                     continue;
-                _networkUpdates.Add(messageType, 0);
+                _networkUpdates.Add(messageType, new NetworkUpdateData());
             }
             _reportUploader = gameObject.AddComponent<ReportUploader>();
             RegisterCommands();
@@ -158,13 +165,18 @@ namespace RustServerMetrics
         internal void OnNetWriteSend(SendInfo sendInfo)
         {
             if (!Ready) return;
+            // Don't need to TryGetValue as the dictionary is initialized in Awake()
+            var data = _networkUpdates[ _lastMessageType ];
             if (sendInfo.connection != null)
             {
-                _networkUpdates[_lastMessageType] += 1;
+                data.Count++;
+                data.Bytes += (int)Net.sv.write.Position;
             }
             else if (sendInfo.connections != null)
             {
-                _networkUpdates[_lastMessageType] += sendInfo.connections.Count;
+                int count = sendInfo.connections.Count;
+                data.Count += count;
+                data.Bytes += (int)Net.sv.write.Position * count;
             }
         }
         
@@ -255,11 +267,20 @@ namespace RustServerMetrics
             while (enumerator.MoveNext())
             {
                 networkUpdate = enumerator.Current;
+                // Count first named {type}
                 _stringBuilder.Append(",");
                 _stringBuilder.Append(networkUpdate.Key.ToString());
                 _stringBuilder.Append("=");
-                _stringBuilder.Append(networkUpdate.Value.ToString());
+                _stringBuilder.Append(networkUpdate.Value.Count.ToString());
                 _stringBuilder.Append("i");
+
+                // Bytes second named as "{type}_bytes"
+                _stringBuilder.Append( "," );
+                _stringBuilder.Append( networkUpdate.Key.ToString() );
+                _stringBuilder.Append( "_bytes" );
+                _stringBuilder.Append( "=" );
+                _stringBuilder.Append( networkUpdate.Value.Bytes.ToString() );
+                _stringBuilder.Append( "i" );
             }
 
             _stringBuilder.Append(" ");
@@ -267,9 +288,12 @@ namespace RustServerMetrics
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
 
             var enumKeys = _networkUpdates.Keys.ToArray();
+            // Reset counter
             foreach (var key in enumKeys)
             {
-                _networkUpdates[key] = 0;
+                var data = _networkUpdates[ key ];
+                data.Count = 0;
+                data.Bytes = 0;
             }
         }
         
