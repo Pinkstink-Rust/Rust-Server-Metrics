@@ -20,19 +20,31 @@ namespace RustServerMetrics
         readonly Dictionary<ulong, Action> _playerStatsActions = new();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new();
 
-        readonly Dictionary<Message.Type, int> _networkUpdates = new();
-        
-        public readonly MetricsTimeStorage<MethodInfo> ServerInvokes = new ("invoke_execution", LogMethodInfo);
+        class NetworkUpdateData
+        {
+            public int count;
+            public int bytes;
+
+            public NetworkUpdateData(int count, int bytes)
+            {
+                this.count = count;
+                this.bytes = bytes;
+            }
+        }
+
+        readonly IReadOnlyDictionary<Message.Type, NetworkUpdateData> _networkUpdates = Enum.GetValues(typeof(Message.Type)).Cast<Message.Type>().Distinct().ToDictionary(x => x, z => new NetworkUpdateData(0, 0));
+
+        public readonly MetricsTimeStorage<MethodInfo> ServerInvokes = new("invoke_execution", LogMethodInfo);
         public readonly MetricsTimeStorage<string> ServerRpcCalls = new("rpc_calls", LogMethodName);
-        public readonly MetricsTimeStorage<string> WorkQueueTimes = new ("work_queue", LogMethodName);
-        public readonly MetricsTimeStorage<string> ServerUpdate = new ("server_update", LogMethodName);
-        public readonly MetricsTimeStorage<string> TimeWarnings = new ("timewarnings", LogMethodName);
-        public readonly MetricsTimeStorage<string> ServerConsoleCommands = new ("console_commands", (builder, command) =>
+        public readonly MetricsTimeStorage<string> WorkQueueTimes = new("work_queue", LogMethodName);
+        public readonly MetricsTimeStorage<string> ServerUpdate = new("server_update", LogMethodName);
+        public readonly MetricsTimeStorage<string> TimeWarnings = new("timewarnings", LogMethodName);
+        public readonly MetricsTimeStorage<string> ServerConsoleCommands = new("console_commands", (builder, command) =>
         {
             builder.Append(",command=\"");
             builder.Append(command);
         });
-        
+
         public bool Ready { get; private set; }
         internal ConfigData Configuration { get; private set; }
 
@@ -42,14 +54,14 @@ namespace RustServerMetrics
         ReportUploader _reportUploader;
         Message.Type _lastMessageType;
         bool _firstReportGenerated;
-        
+
         public Uri BaseUri
         {
             get
             {
-                if (_baseUri != null) 
+                if (_baseUri != null)
                     return _baseUri;
-                
+
                 var uri = new Uri(Configuration.databaseUrl);
                 _baseUri = new Uri(uri, $"/write?db={Configuration.databaseName}&precision=ms&u={Configuration.databaseUser}&p={Configuration.databasePassword}");
                 return _baseUri;
@@ -57,7 +69,7 @@ namespace RustServerMetrics
         }
 
         #region Initialization
-        
+
         internal static void Initialize()
         {
             new GameObject().AddComponent<MetricsLogger>();
@@ -67,14 +79,14 @@ namespace RustServerMetrics
         {
             Debug.Log($"[ServerMetrics]: Applying Startup Patches");
             var assembly = GetType().Assembly;
-            
+
             var harmonyInstance = HarmonyLoader.loadedMods.FirstOrDefault(x => x.Assembly == assembly)?.Harmony;
             if (harmonyInstance == null)
             {
                 RustServerMetricsLoader.__harmonyInstance ??= HarmonyInstance.Create("RustServerMetrics" + "PATCH");
                 harmonyInstance = RustServerMetricsLoader.__harmonyInstance;
             }
-            
+
             var nestedTypes = assembly.GetTypes();
             foreach (var nestedType in nestedTypes)
             {
@@ -82,7 +94,7 @@ namespace RustServerMetrics
                 var attributes = HarmonyMethod.Merge(new List<HarmonyMethod> { new() });
                 var patchProcessor = new PatchProcessor(harmonyInstance, nestedType, attributes);
                 patchProcessor.Patch();
-                
+
                 Debug.Log($"[ServerMetrics]: Applied Startup Patch: {nestedType.Name}");
             }
         }
@@ -90,13 +102,6 @@ namespace RustServerMetrics
         public override void Awake()
         {
             base.Awake();
-            var messageTypes = Enum.GetValues(typeof(Message.Type));
-            foreach (Message.Type messageType in messageTypes)
-            {
-                if (_networkUpdates.ContainsKey(messageType))
-                    continue;
-                _networkUpdates.Add(messageType, 0);
-            }
             _reportUploader = gameObject.AddComponent<ReportUploader>();
             RegisterCommands();
 
@@ -117,7 +122,7 @@ namespace RustServerMetrics
         public void StartLoggingMetrics()
         {
             InvokeRepeating(LogNetworkUpdates, UnityEngine.Random.Range(0.25f, 0.75f), 0.5f);
-                
+
             InvokeRepeating(ServerInvokes.SerializeToStringBuilder, UnityEngine.Random.Range(0f, 1f), 1f);
             InvokeRepeating(ServerRpcCalls.SerializeToStringBuilder, UnityEngine.Random.Range(0f, 1f), 1f);
             InvokeRepeating(ServerConsoleCommands.SerializeToStringBuilder, UnityEngine.Random.Range(0f, 1f), 1f);
@@ -127,8 +132,8 @@ namespace RustServerMetrics
         }
 
         #endregion
-        
-        
+
+
         internal void OnPlayerInit(BasePlayer player)
         {
             if (!Ready) return;
@@ -155,20 +160,22 @@ namespace RustServerMetrics
             _lastMessageType = messageType;
         }
 
-        internal void OnNetWriteSend(SendInfo sendInfo)
+        internal void OnNetWriteSend(NetWrite write, SendInfo sendInfo)
         {
             if (!Ready) return;
+            var data = _networkUpdates[_lastMessageType];
             if (sendInfo.connection != null)
             {
-                _networkUpdates[_lastMessageType] += 1;
+                data.count++;
+                data.bytes += (int)write.Position;
             }
             else if (sendInfo.connections != null)
             {
-                _networkUpdates[_lastMessageType] += sendInfo.connections.Count;
+                data.count += sendInfo.connections.Count;
+                data.bytes += (int)write.Position * data.count;
             }
         }
-        
-        
+
         internal void OnOxidePluginMetrics(Dictionary<string, double> metrics)
         {
             if (!Ready) return;
@@ -182,7 +189,7 @@ namespace RustServerMetrics
                     builder.Append(report.Key);
                     builder.Append("\" hookTime=");
                     builder.Append(report.Value);
-                });  
+                });
             }
         }
 
@@ -199,7 +206,7 @@ namespace RustServerMetrics
                 builder.Append("i,fps=");
                 builder.Append(report.fps);
             });
-            
+
             _requestedClientPerf.Remove(clientPerformanceReport.user_id);
             return true;
         }
@@ -228,12 +235,12 @@ namespace RustServerMetrics
                 builder.Append(basePlayer.UserIDString);
                 builder.Append(",ip=");
                 builder.Append(ip.Substring(0, ip.LastIndexOf(':')));
-                builder.Append(" ping="); 
+                builder.Append(" ping=");
                 builder.Append(Net.sv.GetAveragePing(basePlayer.net.connection));
                 builder.Append("i,packet_loss=");
                 builder.Append(Net.sv.GetStat(basePlayer.net.connection, BaseNetwork.StatTypeLong.PacketLossLastSecond));
                 builder.Append("i ");
-            });  
+            });
         }
 
         void LogNetworkUpdates()
@@ -246,33 +253,57 @@ namespace RustServerMetrics
             _stringBuilder.Append(" ");
 
             var enumerator = _networkUpdates.GetEnumerator();
-            var networkUpdate = enumerator.Current;
-            _stringBuilder.Append(networkUpdate.Key.ToString());
-            _stringBuilder.Append("=");
-            _stringBuilder.Append(networkUpdate.Value.ToString());
-            _stringBuilder.Append("i");
-
-            while (enumerator.MoveNext())
+            if (enumerator.MoveNext())
             {
-                networkUpdate = enumerator.Current;
-                _stringBuilder.Append(",");
-                _stringBuilder.Append(networkUpdate.Key.ToString());
+                var networkUpdate = enumerator.Current;
+                var key = networkUpdate.Key.ToString();
+                var value = networkUpdate.Value;
+                // Count first named {type}
+                _stringBuilder.Append(key);
                 _stringBuilder.Append("=");
-                _stringBuilder.Append(networkUpdate.Value.ToString());
+                _stringBuilder.Append(value.count.ToString());
                 _stringBuilder.Append("i");
+                value.count = 0;
+
+                // Bytes second named as "{type}_bytes"
+                _stringBuilder.Append(",");
+                _stringBuilder.Append(key);
+                _stringBuilder.Append("_bytes");
+                _stringBuilder.Append("=");
+                _stringBuilder.Append(value.bytes.ToString());
+                _stringBuilder.Append("i");
+                value.bytes = 0;
+
+                while (enumerator.MoveNext())
+                {
+                    networkUpdate = enumerator.Current;
+                    key = networkUpdate.Key.ToString();
+                    value = networkUpdate.Value;
+
+                    // Count first named {type}
+                    _stringBuilder.Append(",");
+                    _stringBuilder.Append(key);
+                    _stringBuilder.Append("=");
+                    _stringBuilder.Append(value.count.ToString());
+                    _stringBuilder.Append("i");
+                    value.count = 0;
+
+                    // Bytes second named as "{type}_bytes"
+                    _stringBuilder.Append(",");
+                    _stringBuilder.Append(key);
+                    _stringBuilder.Append("_bytes");
+                    _stringBuilder.Append("=");
+                    _stringBuilder.Append(value.bytes.ToString());
+                    _stringBuilder.Append("i");
+                    value.bytes = 0;
+                }
             }
 
             _stringBuilder.Append(" ");
             _stringBuilder.Append(epochNow);
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
-
-            var enumKeys = _networkUpdates.Keys.ToArray();
-            foreach (var key in enumKeys)
-            {
-                _networkUpdates[key] = 0;
-            }
         }
-        
+
         internal void OnPerformanceReportGenerated()
         {
             if (!Ready) return;
@@ -368,7 +399,7 @@ namespace RustServerMetrics
             _reportUploader.AddToSendBuffer(_stringBuilder.ToString());
         }
 
-        
+
         #region Helpers
 
         public void UploadPacket<T>(string ID, T data, Action<StringBuilder, T> serializer)
@@ -377,16 +408,16 @@ namespace RustServerMetrics
             _stringBuilder.Clear();
             _stringBuilder.Append(ID);
             _stringBuilder.Append(",server=");
-            _stringBuilder.Append(Configuration.serverTag); 
-            
+            _stringBuilder.Append(Configuration.serverTag);
+
             serializer.Invoke(_stringBuilder, data);
 
             _stringBuilder.Append(" ");
             _stringBuilder.Append(epochNow);
-            
+
             AddToSendBuffer(_stringBuilder.ToString());
         }
-        
+
         public void AddToSendBuffer(string toString) => _reportUploader.AddToSendBuffer(toString);
 
         private static void LogMethodInfo(StringBuilder builder, MethodInfo info)
@@ -411,7 +442,7 @@ namespace RustServerMetrics
         }
         #endregion
 
-        
+
         #region Commands
 
         void RegisterCommands()
@@ -436,13 +467,13 @@ namespace RustServerMetrics
                 Variable = false,
                 Call = new Action<ConsoleSystem.Arg>(StatusCommand)
             };
-            
+
             ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "reloadcfg"] = reloadCfgCommand;
             ConsoleSystem.Index.Server.Dict[commandPrefix + "." + "status"] = statusCommand;
 
             // Would be nice if this had a public setter, or better yet, a register command helper
             // update: now it does
-            ConsoleSystem.Index.All = ConsoleSystem.Index.All.Concat(new [] { reloadCfgCommand, statusCommand }).ToArray();
+            ConsoleSystem.Index.All = ConsoleSystem.Index.All.Concat(new[] { reloadCfgCommand, statusCommand }).ToArray();
         }
 
         void StatusCommand(ConsoleSystem.Arg arg)
@@ -471,7 +502,7 @@ namespace RustServerMetrics
                 {
                     CancelInvoke(invoke.action);
                 }
-                 
+
                 foreach (var player in _playerStatsActions)
                 {
                     var basePlayer = BasePlayer.FindByID(player.Key);
@@ -493,17 +524,17 @@ namespace RustServerMetrics
                 {
                     OnPlayerInit(player);
                 }
-                
+
                 StartLoggingMetrics();
             }
             arg.ReplyWith("[ServerMetrics]: Configuration reloaded");
         }
 
         #endregion
-        
-        
+
+
         #region Configuration
-        
+
         bool ValidateConfiguration()
         {
             if (Configuration == null) return false;
@@ -568,7 +599,7 @@ namespace RustServerMetrics
                 Debug.LogException(ex);
             }
         }
-        
+
         #endregion
     }
 }
