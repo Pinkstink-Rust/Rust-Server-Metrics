@@ -186,7 +186,7 @@ namespace RustServerMetrics
                 UploadPacket("oxide_plugins", metric, (builder, report) =>
                 {
                     builder.Append(",plugin=\"");
-                    builder.Append(report.Key);
+                    builder.Append(report.Key.Replace("\"", "\\\""));
                     builder.Append("\" hookTime=");
                     builder.Append(report.Value);
                 });
