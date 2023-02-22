@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace RustServerMetrics
@@ -16,7 +17,7 @@ namespace RustServerMetrics
     public class MetricsLogger : SingletonComponent<MetricsLogger>
     {
         const string CONFIGURATION_PATH = "HarmonyMods_Data/ServerMetrics/Configuration.json";
-        readonly static char[] PLUGIN_NAME_TRIMSTART = new char[] { '_' };
+        readonly static Regex PLUGIN_NAME_REGEX = new Regex(@"_|[^\w\d]");
         readonly StringBuilder _stringBuilder = new();
         readonly Dictionary<ulong, Action> _playerStatsActions = new();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new();
@@ -187,7 +188,7 @@ namespace RustServerMetrics
                 UploadPacket("oxide_plugins", metric, (builder, report) =>
                 {
                     builder.Append(",plugin=\"");
-                    builder.Append(report.Key.TrimStart(PLUGIN_NAME_TRIMSTART).Replace("\"", "\\\""));
+                    builder.Append(PLUGIN_NAME_REGEX.Replace(report.Key, string.Empty));
                     builder.Append("\" hookTime=");
                     builder.Append(report.Value);
                 });
