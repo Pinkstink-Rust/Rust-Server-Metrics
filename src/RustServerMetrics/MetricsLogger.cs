@@ -16,6 +16,7 @@ namespace RustServerMetrics
     public class MetricsLogger : SingletonComponent<MetricsLogger>
     {
         const string CONFIGURATION_PATH = "HarmonyMods_Data/ServerMetrics/Configuration.json";
+        readonly static char[] PLUGIN_NAME_TRIMSTART = new char[] { '_' };
         readonly StringBuilder _stringBuilder = new();
         readonly Dictionary<ulong, Action> _playerStatsActions = new();
         readonly Dictionary<ulong, uint> _perfReportDelayCounter = new();
@@ -186,7 +187,7 @@ namespace RustServerMetrics
                 UploadPacket("oxide_plugins", metric, (builder, report) =>
                 {
                     builder.Append(",plugin=\"");
-                    builder.Append(report.Key.Replace("\"", "\\\""));
+                    builder.Append(report.Key.TrimStart(PLUGIN_NAME_TRIMSTART).Replace("\"", "\\\""));
                     builder.Append("\" hookTime=");
                     builder.Append(report.Value);
                 });
