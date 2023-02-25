@@ -25,9 +25,9 @@ namespace RustServerMetrics
         class NetworkUpdateData
         {
             public int count;
-            public int bytes;
+            public long bytes;
 
-            public NetworkUpdateData(int count, int bytes)
+            public NetworkUpdateData(int count, long bytes)
             {
                 this.count = count;
                 this.bytes = bytes;
@@ -169,12 +169,12 @@ namespace RustServerMetrics
             if (sendInfo.connection != null)
             {
                 data.count++;
-                data.bytes += (int)write.Position;
+                data.bytes += write.Position;
             }
             else if (sendInfo.connections != null)
             {
                 data.count += sendInfo.connections.Count;
-                data.bytes += (int)write.Position * data.count;
+                data.bytes += write.Position * data.count;
             }
         }
 
