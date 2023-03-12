@@ -9,6 +9,9 @@ namespace RustServerMetrics.HarmonyPatches
         [HarmonyPostfix]
         public static void Postfix(NetWrite __instance, SendInfo info)
         {
+            if (SingletonComponent<MetricsLogger>.Instance == null)
+                return;
+            
             MetricsLogger.Instance.OnNetWriteSend(__instance, info);
         }
     }
