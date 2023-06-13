@@ -173,8 +173,9 @@ namespace RustServerMetrics
             }
             else if (sendInfo.connections != null)
             {
-                data.count += sendInfo.connections.Count;
-                data.bytes += write.Position * data.count;
+                var count = sendInfo.connections.Count;
+                data.count += count;
+                data.bytes += write.Position * count;
             }
         }
 

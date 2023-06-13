@@ -55,8 +55,6 @@
 		<Reference Include="Assembly-CSharp" />
 		<Reference Include="Assembly-CSharp-firstpass" />
 		<Reference Include="CurvedTextMeshPro" />
-		<Reference Include="EasyAntiCheat.Client" />
-		<Reference Include="EasyAntiCheat.Server" />
 		<Reference Include="EZhex1991.EZSoftBone" />
 		<Reference Include="Facepunch.Console" />
 		<Reference Include="Facepunch.GoogleSheets" />
