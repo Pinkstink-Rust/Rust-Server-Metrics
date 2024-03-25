@@ -83,6 +83,7 @@ The report buffer is hardcoded to a size of 100,000 reports, once this buffer si
 If you plan to play around with the `Amount of metrics to submit in each request` configuration variable, ensure you watch the size of the report buffer.
 
 # Securing InfluxDB 1.8
+**IMPORTANT - Failure to secure your InfluxDB can result in your data being accessible to the general public! Please follow all steps below**
 
 ## Enable Authentication
 
@@ -146,5 +147,4 @@ If you plan to play around with the `Amount of metrics to submit in each request
 
 ---
 
-Following these steps will help secure your InfluxDB 1.8 installation against unauthorized access and potential security threats.
 
