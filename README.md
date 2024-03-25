@@ -81,3 +81,70 @@ This command will output whether the Mod is ready to collect metrics, whether th
 The report buffer is hardcoded to a size of 100,000 reports, once this buffer size is exceeded, the Mod will begin to discard reports, of which will cause data to be missing from your Grafana dashboard.
 
 If you plan to play around with the `Amount of metrics to submit in each request` configuration variable, ensure you watch the size of the report buffer.
+
+# Securing InfluxDB 1.8
+**IMPORTANT - Failure to secure your InfluxDB can result in your data being accessible to the general public! Please follow all steps below**
+
+## Enable Authentication
+
+1. **Edit the InfluxDB Configuration File**: Locate the InfluxDB configuration file (`influxdb.conf`), usually found in `/etc/influxdb/`.
+
+2. **Enable HTTP Authentication**:
+    - Find the `[http]` section.
+    - Set `auth-enabled` to `true`.
+    ```
+    [http]
+      auth-enabled = true
+    ```
+
+3. **Restart InfluxDB**: Apply the configuration changes by restarting the InfluxDB service.
+    ```bash
+    sudo systemctl restart influxdb
+    ```
+
+4. **Create Users with Passwords**:
+    - Access the InfluxDB shell.
+    ```bash
+    influx
+    ```
+    - Create an admin user (replace `<username>` and `<password>` with your desired credentials).
+    ```influx
+    CREATE USER <username> WITH PASSWORD '<password>' WITH ALL PRIVILEGES
+    ```
+    - Optionally, create additional users with fewer privileges as needed.
+
+## Secure the InfluxDB with HTTPS
+
+1. **Obtain SSL Certificates**: You can use a tool like Let's Encrypt or generate a self-signed certificate.
+
+2. **Configure HTTPS in InfluxDB**:
+    - In the `influxdb.conf` file, locate the `[http]` section again.
+    - Set `https-enabled` to `true`.
+    - Provide the paths to your SSL certificate and key.
+    ```
+    [http]
+      https-enabled = true
+      https-certificate = "/path/to/your/certificate.pem"
+      https-private-key = "/path/to/your/privatekey.pem"
+    ```
+
+3. **Restart InfluxDB** to apply the HTTPS settings.
+    ```bash
+    sudo systemctl restart influxdb
+    ```
+
+## Firewall Configuration
+
+- Ensure your firewall is configured to allow only trusted traffic to the InfluxDB ports (`8086` for HTTP by default, or `8084` if HTTPS is enabled).
+
+## Regularly Update InfluxDB
+
+- Keep your InfluxDB version up to date with the latest security patches by regularly checking for and applying updates.
+
+## Backup Your Data Regularly
+
+- Regularly backup your InfluxDB data to prevent data loss in case of a security breach or failure.
+
+---
+
+
