@@ -18,7 +18,7 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
         {
             if (!RustServerMetricsLoader.__serverStarted)
             {
-                Debug.Log("Cannot patch ObjectWorkQueue_RunJob_Patch yet. We will patch it upon server start.");
+                Debug.Log("Note: Cannot patch ObjectWorkQueue_RunJob_Patch yet. We will patch it upon server start.");
                 return false;
             }
 

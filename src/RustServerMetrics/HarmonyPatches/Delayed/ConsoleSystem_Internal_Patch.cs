@@ -16,7 +16,7 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
         {
             if (!RustServerMetricsLoader.__serverStarted)
             {
-                Debug.Log("Cannot patch ConsoleSystem_Internal_Patch yet. We will patch it upon server start.");
+                Debug.Log("Note: Cannot patch ConsoleSystem_Internal_Patch yet. We will patch it upon server start.");
                 return false;
             }
 

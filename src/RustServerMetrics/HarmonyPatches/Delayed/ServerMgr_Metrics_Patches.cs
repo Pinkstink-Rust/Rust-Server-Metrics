@@ -18,7 +18,7 @@ internal static class ServerMgr_Metrics_Patches
     {
         if (!RustServerMetricsLoader.__serverStarted)
         {
-            Debug.Log("Cannot patch ServerMgr_Metrics_Patches yet. We will patch it upon server start.");
+            Debug.Log("Note: Cannot patch ServerMgr_Metrics_Patches yet. We will patch it upon server start.");
             return false;
         }
 

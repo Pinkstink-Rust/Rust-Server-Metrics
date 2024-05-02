@@ -19,7 +19,7 @@ public static class ModTimeWarnings
     {
         if (!RustServerMetricsLoader.__serverStarted)
         {
-            Debug.Log("Cannot patch any time warnings yet. We will patch it upon server start.");
+            Debug.Log("Note: Cannot patch any time warnings yet. We will patch it upon server start.");
             return false;
         }
 
