@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using Network;
 using Newtonsoft.Json;
 using RustServerMetrics.Config;
@@ -79,13 +79,15 @@ namespace RustServerMetrics
 
         internal void OnServerStarted()
         {
+            RustServerMetricsLoader.__serverStarted = true;
+            
             Debug.Log($"[ServerMetrics]: Applying Startup Patches");
             var assembly = GetType().Assembly;
 
-            var harmonyInstance = HarmonyLoader.loadedMods.FirstOrDefault(x => x.Assembly == assembly)?.Harmony;
+            var harmonyInstance = HarmonyLoader.loadedMods.FirstOrDefault(x => x.Assembly == assembly)?.Harmony.harmonyObject;
             if (harmonyInstance == null)
             {
-                RustServerMetricsLoader.__harmonyInstance ??= HarmonyInstance.Create("RustServerMetrics" + "PATCH");
+                RustServerMetricsLoader.__harmonyInstance ??= new Harmony("RustServerMetrics" + "PATCH");
                 harmonyInstance = RustServerMetricsLoader.__harmonyInstance;
             }
 
@@ -93,11 +95,9 @@ namespace RustServerMetrics
             foreach (var nestedType in nestedTypes)
             {
                 if (nestedType.GetCustomAttribute<DelayedHarmonyPatchAttribute>(false) == null) continue;
-                var attributes = HarmonyMethod.Merge(new List<HarmonyMethod> { new() });
-                var patchProcessor = new PatchProcessor(harmonyInstance, nestedType, attributes);
-                patchProcessor.Patch();
-
-                Debug.Log($"[ServerMetrics]: Applied Startup Patch: {nestedType.Name}");
+                
+                var patchProcessor = new PatchClassProcessor((Harmony)harmonyInstance, nestedType);
+                Debug.Log(patchProcessor.Patch() == null ? $"[ServerMetrics]: Failed to apply patch: {nestedType.Name}" : $"[ServerMetrics]: Applied Startup Patch: {nestedType.Name}");
             }
         }
 

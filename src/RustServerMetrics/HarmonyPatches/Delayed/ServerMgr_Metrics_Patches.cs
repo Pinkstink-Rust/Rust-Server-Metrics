@@ -3,17 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Harmony;
+using HarmonyLib;
 using RustServerMetrics.HarmonyPatches.Utility;
 using UnityEngine;
 
 namespace RustServerMetrics.HarmonyPatches.Delayed;
 
 [DelayedHarmonyPatch]
+[HarmonyPatch]
 internal static class ServerMgr_Metrics_Patches
 {
+    [HarmonyPrepare]
+    public static bool Prepare()
+    {
+        if (!RustServerMetricsLoader.__serverStarted)
+        {
+            Debug.Log("Note: Cannot patch ServerMgr_Metrics_Patches yet. We will patch it upon server start.");
+            return false;
+        }
+
+        return true;
+    }
+    
     [HarmonyTargetMethods]
-    public static IEnumerable<MethodBase> TargetMethods(HarmonyInstance harmonyInstance)
+    public static IEnumerable<MethodBase> TargetMethods(Harmony harmonyInstance)
     {
         yield return AccessTools.Method(typeof(ServerMgr), nameof(ServerMgr.Update));
         yield return AccessTools.Method(typeof(ServerBuildingManager), nameof(ServerBuildingManager.Cycle));

@@ -1,14 +1,16 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using RustServerMetrics.HarmonyPatches.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using UnityEngine;
 
 namespace RustServerMetrics.HarmonyPatches.Delayed
 {
     [DelayedHarmonyPatch]
+    [HarmonyPatch]
     internal static class InvokeHandlerBase_DoTick_Patch
     {
         static System.Diagnostics.Stopwatch _stopwatch = new System.Diagnostics.Stopwatch();
@@ -21,8 +23,20 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
             new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Action), nameof(Action.Invoke)))
         };
 
+        [HarmonyPrepare]
+        public static bool Prepare()
+        {
+            if (!RustServerMetricsLoader.__serverStarted)
+            {
+                Debug.Log("Note: Cannot patch InvokeHandlerBase_DoTick_Patch yet. We will patch it upon server start.");
+                return false;
+            }
+
+            return true;
+        }
+        
         [HarmonyTargetMethods]
-        public static IEnumerable<MethodBase> TargetMethods(HarmonyInstance harmonyInstance)
+        public static IEnumerable<MethodBase> TargetMethods(Harmony harmonyInstance)
         {
             yield return AccessTools.DeclaredMethod(typeof(InvokeHandlerBase<InvokeHandler>), nameof(InvokeHandlerBase<InvokeHandler>.DoTick));
         }
