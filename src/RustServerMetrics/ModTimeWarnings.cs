@@ -3,17 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Harmony;
+using HarmonyLib;
 using RustServerMetrics.HarmonyPatches.Utility;
+using UnityEngine;
 
 namespace RustServerMetrics;
 
+[HarmonyPatch]
 public static class ModTimeWarnings
 {
     public static List<MethodInfo> Methods = new ();
 
+    [HarmonyPrepare]
+    public static bool Prepare()
+    {
+        if (!RustServerMetricsLoader.__serverStarted)
+        {
+            Debug.Log("Cannot patch any time warnings yet. We will patch it upon server start.");
+            return false;
+        }
+
+        return true;
+    }
+    
     [HarmonyTargetMethods]
-    public static IEnumerable<MethodBase> TargetMethods(HarmonyInstance harmonyInstance) => Methods;
+    public static IEnumerable<MethodBase> TargetMethods(Harmony harmonyInstance) => Methods;
     
     [HarmonyTranspiler]
     public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> originalInstructions, MethodBase methodBase, ILGenerator ilGenerator)

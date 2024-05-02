@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using RustServerMetrics.HarmonyPatches.Utility;
 using System;
 using System.Collections.Generic;
@@ -10,10 +10,23 @@ using UnityEngine;
 namespace RustServerMetrics.HarmonyPatches.Delayed
 {
     [DelayedHarmonyPatch]
+    [HarmonyPatch]
     internal class RPCServer_Attribute_Method_Patch
     {
+        [HarmonyPrepare]
+        public static bool Prepare()
+        {
+            if (!RustServerMetricsLoader.__serverStarted)
+            {
+                Debug.Log("Cannot patch RPCServer_Attribute_Method_Patch yet. We will patch it upon server start.");
+                return false;
+            }
+
+            return true;
+        }
+        
         [HarmonyTargetMethods]
-        public static IEnumerable<MethodBase> TargetMethods(HarmonyInstance harmonyInstance)
+        public static IEnumerable<MethodBase> TargetMethods(Harmony harmonyInstance)
         {
             var baseNetworkableType = typeof(BaseNetworkable);
             var baseNetworkableAssembly = baseNetworkableType.Assembly;

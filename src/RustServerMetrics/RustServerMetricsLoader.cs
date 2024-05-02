@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
-using Harmony;
-using RustServerMetrics.HarmonyPatches.Utility;
+using HarmonyLib;
 using UnityEngine;
 
 namespace RustServerMetrics;
 
 public class RustServerMetricsLoader : IHarmonyModHooks
 {
-    public static HarmonyInstance __harmonyInstance;
-    public static List<HarmonyInstance> __modTimeWarningsHarmonyInstances = new ();
+    public static bool __serverStarted = false;
+    
+    public static Harmony __harmonyInstance;
+    public static List<Harmony> __modTimeWarningsHarmonyInstances = new ();
     
     public void OnLoaded(OnHarmonyModLoadedArgs args)
     {
@@ -36,14 +37,13 @@ public class RustServerMetricsLoader : IHarmonyModHooks
 
     public void AddModTimeWarnings(List<MethodInfo> methods)
     { 
-        var instance = HarmonyInstance.Create($"RustServerMetrics.ModTimeWarnings.{__modTimeWarningsHarmonyInstances.Count}");
+        var instance = new Harmony($"RustServerMetrics.ModTimeWarnings.{__modTimeWarningsHarmonyInstances.Count}");
         __modTimeWarningsHarmonyInstances.Add(instance);
          
         ModTimeWarnings.Methods.Clear();
         ModTimeWarnings.Methods.AddRange(methods);
         
-        var attributes = HarmonyMethod.Merge(new List<HarmonyMethod> { new() });
-        var patchProcessor = new PatchProcessor(instance, typeof(ModTimeWarnings), attributes);
+        var patchProcessor = new PatchClassProcessor(instance, typeof(ModTimeWarnings));
         patchProcessor.Patch();
         
         foreach (var method in methods)
