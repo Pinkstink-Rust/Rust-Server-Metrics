@@ -68,6 +68,7 @@
 		<Reference Include="Facepunch.System" />
 		<Reference Include="Facepunch.Unity" />
 		<Reference Include="Facepunch.UnityEngine" />
+		<Reference Include="mscorlib" />
 		<Reference Include="Newtonsoft.Json" />
 		<Reference Include="Rust.Data" />
 		<Reference Include="Rust.Demo" />
