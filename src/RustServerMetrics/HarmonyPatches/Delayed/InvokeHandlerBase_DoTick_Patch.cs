@@ -16,12 +16,20 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
         static System.Diagnostics.Stopwatch _stopwatch = new System.Diagnostics.Stopwatch();
         static bool _failedExecution = false;
 
-        readonly static CodeInstruction[] _sequenceToFind = new CodeInstruction[]
+        readonly static CodeInstruction[] _replacementSequenceToFind = new CodeInstruction[]
         {
             new CodeInstruction(OpCodes.Ldloc_S),
             new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(InvokeAction), nameof(InvokeAction.action))),
-            new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Action), nameof(Action.Invoke)))
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Action), nameof(Action.Invoke))),
+            new CodeInstruction(OpCodes.Br_S)
         };
+
+        readonly static CodeInstruction[] _jmpSequenceToFind = new CodeInstruction[]
+{
+            new CodeInstruction(OpCodes.Ldloc_S),
+            new CodeInstruction(OpCodes.Ldc_I4_1),
+            new CodeInstruction(OpCodes.Add)
+};
 
         [HarmonyPrepare]
         public static bool Prepare()
@@ -44,18 +52,25 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> originalInstructions, MethodBase methodBase)
         {
-            _sequenceToFind[0].operand = methodBase.GetMethodBody().LocalVariables.FirstOrDefault(x => x.LocalType == typeof(InvokeAction));
-
-            var methodToCallInfo = typeof(InvokeHandlerBase_DoTick_Patch)
-                .GetMethod(nameof(InvokeHandlerBase_DoTick_Patch.InvokeWrapper), BindingFlags.Static | BindingFlags.NonPublic);
+            LocalVariableInfo variableInfo = methodBase.GetMethodBody().LocalVariables.FirstOrDefault(x => x.LocalType == typeof(InvokeAction));
+            _replacementSequenceToFind[0].operand = variableInfo;
+            _jmpSequenceToFind[0].operand = variableInfo;
 
             var instructionsList = new List<CodeInstruction>(originalInstructions);
-            var idx = GetSequenceStartIndex(instructionsList, _sequenceToFind);
 
-            if (idx < 0) throw new Exception($"Failed to find injection index for {nameof(InvokeHandlerBase_DoTick_Patch)}");
+            var jmpIdx = GetSequenceStartIndex(instructionsList, _jmpSequenceToFind);
+            if (jmpIdx < 0) throw new Exception($"Failed to find jmp injection index for {nameof(InvokeHandlerBase_DoTick_Patch)}");
 
-            instructionsList.RemoveRange(idx + 1, _sequenceToFind.Length - 1);
-            instructionsList.InsertRange(idx + 1, new CodeInstruction[]
+            _replacementSequenceToFind[3].operand = instructionsList[jmpIdx];
+
+            var methodToCallInfo = typeof(InvokeHandlerBase_DoTick_Patch)
+                .GetMethod(nameof(InvokeWrapper), BindingFlags.Static | BindingFlags.NonPublic);
+
+            var replacementIdx = GetSequenceStartIndex(instructionsList, _replacementSequenceToFind);
+            if (replacementIdx < 0) throw new Exception($"Failed to find replacement injection index for {nameof(InvokeHandlerBase_DoTick_Patch)}");
+
+            instructionsList.RemoveRange(replacementIdx + 1, _replacementSequenceToFind.Length - 1);
+            instructionsList.InsertRange(replacementIdx + 1, new CodeInstruction[]
             {
                 new CodeInstruction(OpCodes.Call, methodToCallInfo)
             });
@@ -79,10 +94,7 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
             finally
             {
                 _stopwatch.Stop();
-                if (MetricsLogger.Instance != null)
-                {
-                    MetricsLogger.Instance.ServerInvokes.LogTime(invokeAction.action.Method, _stopwatch.Elapsed.TotalMilliseconds);
-                }
+                MetricsLogger.Instance?.ServerInvokes.LogTime(invokeAction.action.Method, _stopwatch.Elapsed.TotalMilliseconds);
             }
         }
 
