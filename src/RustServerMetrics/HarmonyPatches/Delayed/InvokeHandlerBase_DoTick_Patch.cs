@@ -69,7 +69,7 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
             var replacementIdx = GetSequenceStartIndex(instructionsList, _replacementSequenceToFind);
             if (replacementIdx < 0) throw new Exception($"Failed to find replacement injection index for {nameof(InvokeHandlerBase_DoTick_Patch)}");
 
-            instructionsList.RemoveRange(replacementIdx + 1, _replacementSequenceToFind.Length - 1);
+            instructionsList.RemoveRange(replacementIdx + 1, _replacementSequenceToFind.Length - 2);
             instructionsList.InsertRange(replacementIdx + 1, new CodeInstruction[]
             {
                 new CodeInstruction(OpCodes.Call, methodToCallInfo)
