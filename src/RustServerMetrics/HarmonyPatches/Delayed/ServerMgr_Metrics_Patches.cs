@@ -38,7 +38,6 @@ internal static class ServerMgr_Metrics_Patches
         
         yield return AccessTools.Method(typeof(AIThinkManager), nameof(AIThinkManager.ProcessQueue));
         yield return AccessTools.Method(typeof(IOEntity), nameof(IOEntity.ProcessQueue));
-        yield return AccessTools.Method(typeof(BaseRidableAnimal), nameof(BaseRidableAnimal.ProcessQueue));
         
         yield return AccessTools.Method(typeof(BasePet), nameof(BasePet.ProcessMovementQueue));
         yield return AccessTools.Method(typeof(BaseMountable), nameof(BaseMountable.FixedUpdateCycle));
