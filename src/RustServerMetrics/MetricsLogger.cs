@@ -158,24 +158,32 @@ namespace RustServerMetrics
 
         internal void OnNetWritePacketID(Message.Type messageType)
         {
-            if (!Ready) return;
+            if (!Ready)
+            {
+                return;
+            }
+            
             _lastMessageType = messageType;
         }
 
         internal void OnNetWriteSend(NetWrite write, SendInfo sendInfo)
         {
-            if (!Ready) return;
+            if (!Ready)
+            {
+                return;
+            }
+            
             var data = _networkUpdates[_lastMessageType];
             if (sendInfo.connection != null)
             {
                 data.count++;
-                data.bytes += write.Position;
+                data.bytes += write.Length;
             }
             else if (sendInfo.connections != null)
             {
                 var count = sendInfo.connections.Count;
                 data.count += count;
-                data.bytes += write.Position * count;
+                data.bytes += write.Length * count;
             }
         }
 
